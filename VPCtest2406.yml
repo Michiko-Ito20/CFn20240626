@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:                     #スタックの説明
+  test-CloudFormation
+
+# VPC作成
+Resources:
+  TestVPC:                        #リソースの名前
+    Type: AWS::EC2::VPC           #VPC作成するタイプを指定
+    Properties:                   #スタック起動時にテンプレート渡す値
+      CidrBlock: 10.0.0.0/16      #CidrBlockを指定
+      Tags:                       #タグの指定、Key、Valueの順に記載する
+        - Key: Name
+          Value: TEST-VPC
+
+
+# InternetGateway作成
+  TestIGW:                        #リソースの名前
+    Type: AWS::EC2::InternetGateway  #インターネットゲートウェイ作成するタイプを指定
+    Properties:
+      Tags:                       #タグの指定、Key、Valueの順に記載する
+        - Key: Name
+          Value: TEST-IGW             
+
+# InternetGatewayをVPCにくっつける
+  AttachGateway:                  #リソースの名前
+    Type: AWS::EC2::VPCGatewayAttachment  #IGWをVPCにアタッチするタイプを指定
+    Properties:
+      VpcId: !Ref TestVPC         #【!Ref】で最初に設定したVPCを指定
+      InternetGatewayId: !Ref TestIGW     #最初に設定したVPCにIGWを適用
+
+
+# Subnetを作成（public_2、Private_2）
+  publicsubnet01:                 #リソースの名前
+    Type: AWS::EC2::Subnet        #サブネットを作成するタイプを指定
+    Properties:
+      AvailabilityZone: ap-northeast-1a   #AZの指定
+      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      CidrBlock: 10.0.0.0/24      #CidrBlockを指定
+      Tags:
+        - Key: Name
+          Value: publicsubnet01
+
+  publicsubnet02:                 #リソースの名前
+    Type: AWS::EC2::Subnet        #サブネットを作成するタイプを指定
+    Properties:
+      AvailabilityZone: ap-northeast-1d   #AZの指定
+      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      CidrBlock: 10.0.1.0/24      #CidrBlockを指定
+      Tags:
+        - Key: Name
+          Value: publicsubnet02
+
+  privatesubnet01:                 #リソースの名前
+    Type: AWS::EC2::Subnet         #サブネットを作成するタイプを指定 
+    Properties:
+      AvailabilityZone: ap-northeast-1a   #AZの指定
+      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      CidrBlock: 10.0.2.0/24      #CidrBlockを指定
+      Tags:
+        - Key: Name
+          Value: privatesubnet01
+
+  privatesubnet02:                 #リソースの名前
+    Type: AWS::EC2::Subnet         #サブネットを作成するタイプを指定
+    Properties:
+      AvailabilityZone: ap-northeast-1d   #AZの指定
+      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      CidrBlock: 10.0.3.0/24      #CidrBlockを指定
+      Tags:
+        - Key: Name
+          Value: privatesubnet02
+
+
+#ルートテーブルを2つ作成
+  TestRouteTable1:
+    Type: AWS::EC2::RouteTable   #ルートテーブルを作成するタイプを指定。public用のルートテーブル
+    Properties:
+      VpcId: !Ref TestVPC        #【!Ref】で最初に設定したVPCを指定
+      Tags:
+        - Key: Name
+          Value: TEST-RouteTable1
+
+
+  TestRouteTable2: 
+     Type: AWS::EC2::RouteTable   #ルートテーブルを作成するタイプを指定。Private用のルートテーブル
+     Properties: 
+       VpcId: !Ref TestVPC        #【!Ref】で最初に設定したVPCを指定
+       Tags: 
+         - Key: Name
+           Value: TEST-RouteTable2
+
+
+#publicなルートテーブルをつなぐ道を作る
+  TestRoute1:                     #TestRouteTable1をオープンなルートテーブルにする設定
+    Type: AWS::EC2::Route         #ルートテーブルに設定を登録するタイプを指定
+    Properties:
+      RouteTableId: !Ref TestRouteTable1  #【!Ref】で適用するルートテーブルを指定
+      DestinationCidrBlock: 0.0.0.0/0     #Any(フルオープン）のCidrBlockを指定
+      GatewayId: !Ref TestIGW             #【!Ref】で適用するIGWを指定
+
+
+#SubnetごとにルートテーブルのIPを発行する
+  TestSubNetRoutTablAsso1:
+    Type: AWS::EC2::SubnetRouteTableAssociation  #ルートテーブルをサブネットに関連付けするタイプを指定
+    Properties:
+      SubnetId: !Ref publicsubnet01       #【!Ref】で適用するパブリックサブネットを指定
+      RouteTableId: !Ref TestRouteTable1  #【!Ref】でpublicなルートテーブル1を指定
+
+
+  TestSubNetRoutTablAsso2:
+    Type: AWS::EC2::SubnetRouteTableAssociation  #ルートテーブルをサブネットに関連付けするタイプを指定
+    Properties:
+      SubnetId: !Ref publicsubnet02       #【!Ref】で適用するパブリックサブネットを指定
+      RouteTableId: !Ref TestRouteTable1  #【!Ref】でpublicなルートテーブル1を指定
+
+
+  TestSubNetRoutTablAsso3:
+    Type: AWS::EC2::SubnetRouteTableAssociation  #ルートテーブルをサブネットに関連付けするタイプを指定
+    Properties:
+      SubnetId: !Ref privatesubnet01       #【!Ref】で適用するプライベートサブネットを指定
+      RouteTableId: !Ref TestRouteTable2   #【!Ref】でPrivateなルートテーブル2を指定
+
+
+  TestSubNetRoutTablAsso4:
+    Type: AWS::EC2::SubnetRouteTableAssociation  #ルートテーブルをサブネットに関連付けするタイプを指定
+    Properties:
+      SubnetId: !Ref privatesubnet02       #【!Ref】で適用するプライベートサブネットを指定
+      RouteTableId: !Ref TestRouteTable2   #【!Ref】でPrivateなルートテーブル2を指定
+
+
+Outputs:                                   #リソースを追加、変更、削除する変更時に出力する内容
+  TestVPC:
+    Value: !Ref TestVPC
+    Export:
+      Name: VPC_G
+
+  publicsubnet01:
+    Value: !Ref publicsubnet01
+    Export:
+      Name: pubsub01
+
+  publicsubnet02:
+    Value: !Ref publicsubnet02
+    Export:
+      Name: pubsub02
+
+  privatesubnet01:
+    Value: !Ref privatesubnet01
+    Export:
+      Name: prisub01
+
+  privatesubnet02:
+    Value: !Ref privatesubnet02
+    Export:
+      Name: prisub02
+
