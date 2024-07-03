@@ -27,8 +27,7 @@ Resources:
     Type: AWS::EC2::VPCGatewayAttachment  #IGWをVPCにアタッチするタイプを指定
     Properties:
       VpcId: !Ref TestVPC         #【!Ref】で最初に設定したVPCを指定
-      InternetGatewayId: !Ref TestIGW     #最初に設定したVPCにIGWを適用
-
+      InternetGatewayId: !Ref TestIGW     #【!Ref】でTestIGW:で設定した値を返す
 
 # Subnetを作成（public_2、Private_2）
   publicsubnet01:                 #リソースの名前
@@ -133,25 +132,25 @@ Outputs:                                   #リソースを追加、変更、削
   TestVPC:
     Value: !Ref TestVPC
     Export:
-      Name: VPC_G
+      Name: TestVPC_Group
 
   publicsubnet01:
     Value: !Ref publicsubnet01
     Export:
-      Name: pubsub01
+      Name: publicsubnet01
 
   publicsubnet02:
     Value: !Ref publicsubnet02
     Export:
-      Name: pubsub02
+      Name: publicsubnet02
 
   privatesubnet01:
     Value: !Ref privatesubnet01
     Export:
-      Name: prisub01
+      Name: privatesubnet01
 
   privatesubnet02:
     Value: !Ref privatesubnet02
     Export:
-      Name: prisub02
+      Name: privatesubnet02
 
