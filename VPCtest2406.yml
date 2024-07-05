@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Description:                     #スタックの説明
-  test-CloudFormation
+  lecture10-CloudFormation-VPC,subnet
 
 # VPC作成
 Resources:
@@ -11,7 +11,7 @@ Resources:
       CidrBlock: 10.0.0.0/16      #CidrBlockを指定
       Tags:                       #タグの指定、Key、Valueの順に記載する
         - Key: Name
-          Value: TEST-VPC
+          Value: lecture10-VPC
 
 
 # InternetGateway作成
@@ -34,7 +34,7 @@ Resources:
     Type: AWS::EC2::Subnet        #サブネットを作成するタイプを指定
     Properties:
       AvailabilityZone: ap-northeast-1a   #AZの指定
-      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      VpcId: !Ref TestVPC         #【!Ref】で最初に設定したVPCを指定
       CidrBlock: 10.0.0.0/24      #CidrBlockを指定
       Tags:
         - Key: Name
@@ -44,7 +44,7 @@ Resources:
     Type: AWS::EC2::Subnet        #サブネットを作成するタイプを指定
     Properties:
       AvailabilityZone: ap-northeast-1d   #AZの指定
-      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      VpcId: !Ref TestVPC         #【!Ref】で最初に設定したVPCを指定
       CidrBlock: 10.0.1.0/24      #CidrBlockを指定
       Tags:
         - Key: Name
@@ -54,7 +54,7 @@ Resources:
     Type: AWS::EC2::Subnet         #サブネットを作成するタイプを指定 
     Properties:
       AvailabilityZone: ap-northeast-1a   #AZの指定
-      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      VpcId: !Ref TestVPC         #【!Ref】で最初に設定したVPCを指定
       CidrBlock: 10.0.2.0/24      #CidrBlockを指定
       Tags:
         - Key: Name
@@ -64,7 +64,7 @@ Resources:
     Type: AWS::EC2::Subnet         #サブネットを作成するタイプを指定
     Properties:
       AvailabilityZone: ap-northeast-1d   #AZの指定
-      VpcId: !Ref testVPC         #【!Ref】で最初に設定したVPCを指定
+      VpcId: !Ref TestVPC         #【!Ref】で最初に設定したVPCを指定
       CidrBlock: 10.0.3.0/24      #CidrBlockを指定
       Tags:
         - Key: Name
@@ -99,7 +99,7 @@ Resources:
       GatewayId: !Ref TestIGW             #【!Ref】で適用するIGWを指定
 
 
-#SubnetごとにルートテーブルのIPを発行する
+#publicSubnetとprivateSubnetをルートテーブルに関連づける
   TestSubNetRoutTablAsso1:
     Type: AWS::EC2::SubnetRouteTableAssociation  #ルートテーブルをサブネットに関連付けするタイプを指定
     Properties:
@@ -130,27 +130,27 @@ Resources:
 
 Outputs:                                   #リソースを追加、変更、削除する変更時に出力する内容
   TestVPC:
-    Value: !Ref TestVPC
+    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
-      Name: TestVPC_Group
+      Name: lecture10-tVPC                 #lecture10という名前のCloudFormationのVPC
 
   publicsubnet01:
-    Value: !Ref publicsubnet01
+    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
-      Name: publicsubnet01
+      Name: lecture10-publicsubnet01       #lecture10という名前のCloudFormationのpublicSubnet01
 
   publicsubnet02:
-    Value: !Ref publicsubnet02
+    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
-      Name: publicsubnet02
+      Name: lecture10-publicsubnet02       #lecture10という名前のCloudFormationのpublicSubnet02
 
   privatesubnet01:
-    Value: !Ref privatesubnet01
+    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
-      Name: privatesubnet01
+      Name: lecture10-privatesubnet01      #lecture10という名前のCloudFormationのPrivateSubnet01
 
   privatesubnet02:
-    Value: !Ref privatesubnet02
+    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
-      Name: privatesubnet02
+      Name: lecture10-privatesubnet02      #lecture10という名前のCloudFormationのPrivateSubnet02
 
