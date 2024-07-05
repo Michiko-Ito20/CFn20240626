@@ -135,22 +135,22 @@ Outputs:                                   #リソースを追加、変更、削
       Name: lecture10-tVPC                 #lecture10という名前のCloudFormationのVPC
 
   publicsubnet01:
-    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
+    Value: !GetAtt publicsubnet01.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
       Name: lecture10-publicsubnet01       #lecture10という名前のCloudFormationのpublicSubnet01
 
   publicsubnet02:
-    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
+    Value: !GetAtt publicsubnet02.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
       Name: lecture10-publicsubnet02       #lecture10という名前のCloudFormationのpublicSubnet02
 
   privatesubnet01:
-    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
+    Value: !GetAtt privatesubnet01.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
       Name: lecture10-privatesubnet01      #lecture10という名前のCloudFormationのPrivateSubnet01
 
   privatesubnet02:
-    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
+    Value: !GetAtt privatesubnet02.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
     Export:
       Name: lecture10-privatesubnet02      #lecture10という名前のCloudFormationのPrivateSubnet02
 
