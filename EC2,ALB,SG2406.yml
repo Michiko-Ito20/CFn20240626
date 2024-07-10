@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:                     #スタックの説明
+  lecture10-CFn-EC2,ALB,SG
+
+Parameters:                                   #スタック起動時にテンプレート渡す値。!ImportValue で参照。
+  TestVPC:
+    Type: String
+
+  publicsubnet01:
+    Type: String
+
+  publicsubnet02:
+    Type: String
+
+
+# EC2セキュリティグループ
+Resources:                                        #どういったコンポーネントを作るか記載
+  EC2SecurityGroup:                               #リソースの名前
+    Type: AWS::EC2::SecurityGroup                 #EC2のセキュリティグループ
+    Properties:                                   #環境変数となる値をまとめて宣言
+      GroupName: TEST-EC2SecurityGroup            #EC2セキュリティグループの名前
+      GroupDescription: TEST-EC2SecurityGroup     #グループの説明
+      VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidr=出力名にポートする
+      SecurityGroupIngress:                       #セキュリティグループを挿入
+      - 
+        IpProtocol: tcp                           #IPの通信規約
+        CidrIp: 10.0.0.0/16                       #サイダーIP省略可能と書いてあるが
+        FromPort: "22"                            #インバウンドルールSSHサーバの接続待ち受け用
+        ToPort: "22"                              #アウトバウンドルールSSHサーバの接続待ち受け用
+
+# EC2ロールとインスタンスをつなぐ
+  EC2InstanceProfile:                          #リソースの名前 
+    Type: AWS::IAM::InstanceProfile            #IAM ロールを EC2インスタンスに渡す
+    Properties:                                #環境変数となる値をまとめて宣言
+      Path: "/"                                #パスを指定
+      Roles:                                   #アタッチするロール
+        - !Ref EC2Role                         #EC2ロールを参照
+      InstanceProfileName: !Sub ${AWS::StackName}-ec2-profile  #変数名と文字列を結合(AWS::IAM::InstanceProfileとec2-profileという名前)
+
+# EC2にRoleで権限を付与
+  EC2Role:                                     #リソースの名前
+    Type: AWS::IAM::Role                       #IAMロール
+    Properties:
+        Path: "/"
+        RoleName: !Sub ${AWS::StackName}-ec2-role  #変数名と文字列を結合(AWS::IAM::Roleとec2-roleという名前)
+        Tags: 
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ec2-role  #変数名と文字列を結合(AWS::IAM::Roleとec2-roleという名前)
+        AssumeRolePolicyDocument:              #引き受ける役割の説明
+          Version: 2012-10-17                  #このバージョンは固定値
+          Statement:                           #記載する
+          - Effect: Allow                      #効果は許可
+            Principal:                         #主たる
+              Service: ec2.amazonaws.com       #サービスはAWSのEC2で
+            Action: sts:AssumeRole             #Security Token Serviceのアジュームロールで動く
+        ManagedPolicyArns:                     #マネージドポリシーのアタッチ
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  KeyPair:
+    Type: 'AWS::EC2::KeyPair'                  #キーペア
+    Properties:
+      KeyName: !Sub ${AWS::StackName}-keypair  #キーペアスタックの名前を返す
+
+# EC2Instance作成
+  TestEC2Instance:                             #リソースの名前
+    Type: AWS::EC2::Instance                   #EC2インスタンス
+    Properties:
+      ImageId: ami-01ae6169b82b38e3b           #amiのID最新
+      KeyName: raisetech_lecture10             #好きな名
+      InstanceType: t3.micro                   #インスタスのタイプ(今回は再挑戦で使用したのを採用)
+      InstanceInitiatedShutdownBehavior: stop  #インスタンスの削除保護の有効化「停止」(「削除」も選択できる)
+      Tenancy: default                         #テナント属性はデフォルト(AWS 基盤側となるハードウェアは他の利用者と共有する状態で提供)
+      NetworkInterfaces:                       #ネットワークインターフェースの記述
+        - AssociatePublicIpAddress: "true"     #準公共IPアドレス
+          DeviceIndex: "0"                     #機器の見出し
+          SubnetId: !ImportValue lecture10-publicsubnet01-id      #lecture10-publicsubnet01-idに紐づける
+          GroupSet:                            #グループの集合
+            - !Ref EC2SecurityGroup            #TestSecurityGroupからEC2SecurityGroupへ変更
+          PrivateIpAddress: 10.0.1.233         #プライベートIPアドレス指定
+
+      Tags:
+          - Key: Name
+            Value: !Sub ${AWS::StackName}-ec2-instance   #test_linux_instanceから変更
+      
+
+      BlockDeviceMappings:                    #ストレージの設定。Mappingsはキーと名前付きの値を対応付け
+        - DeviceName: /dev/xvda               #デバイス名
+          Ebs:                                #EBSの設定
+            VolumeType: gp2                   #ボリュームタイプ
+            DeleteOnTermination: true         #インスタンス終了時に削除するのか
+            VolumeSize: 10                    #ディスクサイズ（GiB）
+
+      UserData: !Base64 |                     #構築後に実行するコマンド。ex)unicornとかrailsとかも！
+        sudo hostnamectl set-hostname TEST-LINUX-INSTANCE
+
+
+# ALBSG
+  ALBSecurityGroup:                           #ALBのセキュリティグループ
+    Type: AWS::EC2::SecurityGroup             #リソースの名前
+    Properties:
+        GroupName: !Sub ${AWS::StackName}-alb-sg  #変数名と文字列を結合(AWS::StackNameとalb-sgという名前)
+        GroupDescription: ALB SG              #グループの説明、ALB SG
+        VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidr=出力名にポートする
+        Tags:紐づけてイン
+          - Key: Name
+            Value: !Sub ${AWS::StackName}-alb-sg  #変数名と文字列を結合(AWS::StackNameとalb-sgという名前)
+        SecurityGroupIngress:
+          - IpProtocol: tcp                   #プロトコル番号はtcp
+            CidrIp: 10.0.0.0/16               #VPCのデフォルトCidr
+            FromPort: 80                      #通信のポート番号（ここから）
+            ToPort: 80                        #通信のポート番号（ここへ）
+
+# ALB作成
+  ALB:                                        #リソースの名前
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer  #タイプ（ElasticロードバランシングV2のロードバランサー）
+    Properties:
+      Type: "application"                     #アプリケーションタイプ
+      Scheme: "internet-facing"               #計画はインターネットからアクセス可
+      Name: !Sub ${AWS::StackName}-alb        #変数名と文字列を結合(AWS::StackNameとalbという名前)
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-alb  #変数名と文字列を結合(AWS::StackNameとalbという名前)
+      IpAddressType: ipv4
+      Subnets: 
+        - !ImportValue lecture10-publicsubnet01-id              #lecture10-publicsubnet01-idに紐づけてインポート
+        - !ImportValue lecture10-publicsubnet02-id              #lecture10-publicsubnet02-idに紐づけてインポート
+      SecurityGroups: 
+        - !Ref ALBSecurityGroup              #AWSセキュリティグループを参照
+
+# ALBのリスナー(受けとり)設定
+  ListenerHTTP:                              #リソースの名前
+    Type: AWS::ElasticLoadBalancingV2::Listener  #タイプ（ElasticロードバランシングV2のロードバランサー）
+    Properties:
+      DefaultActions:                        #通常の動き
+        - Type: forward                      #送り出す
+          TargetGroupArn: !Ref TargetGroup   #ターゲットグループを参照
+      LoadBalancerArn: !Ref ALB              #ALBを参照
+      Port: 80                               #ポート80番
+      Protocol: HTTP                         #通信規格HTTP
+
+# ALBのターゲットグループ
+  TargetGroup:                               #リソースの名前
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup  #タイプ（ElasticロードバランシングV2のロードバランサー）
+    Properties:
+      Name: !Sub ${AWS::StackName}-tg        #変数名と文字列を結合(AWS::ElasticLoadBalancingV2::TargetGroupとtgという名前)
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-tg   #変数名と文字列を結合(AWS::ElasticLoadBalancingV2::TargetGroupとtgという名前)
+      Port: 80                               #ポート番号を指定
+      Protocol: HTTP                         #プロトコルを指定
+      Matcher:                               #一致するもの
+        HttpCode: '200'                      #正しい場合のHTTPコードを指定
+      VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidrに紐づけてインポートする
+      TargetType: instance                   #ターゲットタイプはインスタンス
+      Targets:
+        - Id: !Ref TestEC2Instance           #EC2インスタンスをターゲットのIDとして参照
+
+
+Outputs:
+  TestEC2Instance:
+    Value: !Ref TestEC2Instance
+    Export:
+      Name: EC2Instance
