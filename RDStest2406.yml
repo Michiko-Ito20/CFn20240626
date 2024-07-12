@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:                                    #スタックの説明
+  lecture10-CFn-RDS
+
+Parameters:                                     #スタックを作成または更新するたびにテンプレートにカスタム値を入力できる
+  TestVPC:
+    Type: String
+
+  privatesubnet01:
+    Type: String
+
+  privatesubnet02:
+    Type: String
+
+
+#DBを作成
+Resources:                                      #どういったコンポーネントを作るか記載
+  DBInstance:                                   #(リソースの名前)DBインスタンス
+    Type: AWS::RDS::DBInstance                  #RDSのインスタンス
+    DeletionPolicy: Delete                      #削除権限は削除※SnapshotもRetainも何かしら残るのでこちらを選択
+    Properties:                                 #テンプレートにカスタム値を入力
+      AllocatedStorage: '20'                    #ストレージ5GiB　MySQLの20GiBは最小サイズ
+      DBInstanceClass: db.t3.micro              #データベースのインスタンスクラスt3マイクロ        
+      DBParameterGroupName: !Ref DBParameterGroup #データベースのカスタム値のグループネーム。パラメーターグループ
+      DBSubnetGroupName: !Ref DBSubnetGroup     #データベースのサブネットグループネーム
+      Engine: MySQL                             #MySQLエンジン
+      EngineVersion: 8.0.35                     #先日作成したRDSと同じバージョン
+      MasterUsername: admin                     #大元のユーザーネームはadmin
+      MasterUserPassword: your_secret           #大元のユーザーパスワード
+      StorageType: gp2                          #ストレージタイプをgp2にする
+
+#DBのサブネットをつなぐ
+  DBSubnetGroup:                                #リソースの名前
+    Type: AWS::RDS::DBSubnetGroup               #データベースサブネットグループ
+    Properties:
+      DBSubnetGroupDescription: custom subnet group #DBサブネットグループの抽出はカスタムサブネットグループ
+      SubnetIds:                                #サブネットのID
+        - !ImportValue lecture10-privatesubnet01-id #プラーベートサブネット1
+        - !ImportValue lecture10-privatesubnet02-id #プライベートサブネット2
+
+#DBの設定
+  DBParameterGroup:                             #RDS データベース ファミリのカスタム パラメータ グループを作成
+    Type: AWS::RDS::DBParameterGroup            #データベースの詳細
+    Properties:
+      Description: custom paramter group        #カスタムサブネットグループの説明
+      Family: MySQL8.0.26                       #今使っているRDSと一緒
+      Parameters:
+        character_set_database: utf8mb4         #データベースの文字コードUTF-8、動画ファイルはMB4
+        character_set_client: utf8mb4           #クライアント(サービスを使う側)の文字コードUTF-8、動画ファイルはMB4
+        character_set_connection: utf8mb4       #接続の表示、文字コードUTF-8、動画ファイルはMB4
+        character_set_results: utf8mb4          #結果の表示、文字コードUTF-8、動画ファイルはMB4
+        character_set_server: utf8mb4           #サーバーの表示、文字コードUTF-8、動画ファイルはMB4
+
+      
+Outputs:                                        #リソースを追加、変更、削除する変更時に出力する内容
+  DBInstanceID:
+    Value: !Ref DBInstance                      #論理IDを参照
+    Export:
+      Name: lecture10-DBInstanceID-id           #lecture10という名前のCloudFormationのDBInstanceID
