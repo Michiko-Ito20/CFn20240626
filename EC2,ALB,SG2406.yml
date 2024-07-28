@@ -102,7 +102,7 @@ Resources:                                        #どういったコンポー�
         GroupName: !Sub ${AWS::StackName}-alb-sg  #変数名と文字列を結合(AWS::StackNameとalb-sgという名前)
         GroupDescription: ALB SG              #グループの説明、ALB SG
         VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidr=出力名にポートする
-        Tags:紐づけてイン
+        Tags:                                 #紐づけてイン
           - Key: Name
             Value: !Sub ${AWS::StackName}-alb-sg  #変数名と文字列を結合(AWS::StackNameとalb-sgという名前)
         SecurityGroupIngress:
