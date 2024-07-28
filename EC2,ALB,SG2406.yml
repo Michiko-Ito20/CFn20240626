@@ -162,3 +162,4 @@ Outputs:                                    #リソースを追加、変更、�
     Value: !Ref TestEC2Instance             #論理IDを参照
     Export:
       Name: lecture10-EC2Instance-id        #lecture10という名前のCloudFormationのEC2Instance
+
