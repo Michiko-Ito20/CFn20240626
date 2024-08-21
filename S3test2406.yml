@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:                                    #スタックの説明
+  lecture10-CFn-S3
+
+Parameters:                                     #スタックを作成または更新するたびにテンプレートにカスタム値を入力できる
+  TestEC2Instance:
+    Type: String
+
+# S3のRoleで権限を付与
+Resources: 
+  S3AccessRole:                                   #(どういったコンポーネントを作るか記載)AWSリソースにアクセス権限を付与
+    Type: "AWS::IAM::Role"                      #IAMロール
+    Properties:
+      AssumeRolePolicyDocument:                 #引き受ける役割の説明
+        Version: "2012-10-17"                   #バージョンは固定値
+        Statement:                              #記載する
+          - 
+            Effect: "Allow"                     #効果は許可
+            Principal:                          #主たる
+              Service: ec2.amazonaws.com        #AWSのEC2サービス
+            Action: sts:AssumeRole              #Security Token Serviceのアジュームロールで動く
+      Path: "/"                                 #パスを指定
+
+#アクセス権限の具体的な内容を記述
+  S3AccessPolicies:                               #S3のアクセスポリシー
+    Type: AWS::IAM::Policy                        #ポリシーの記録
+    Properties:
+      PolicyName: s3access                      #S3アクセス
+      PolicyDocument:          #リソースの名前
+        Version: '2012-10-17'                   #バージョンは固定値
+        Statement:                              #記載する
+          - Effect: Allow                         #効果は許可
+            Action:                               #動作
+              - "s3:ListAllMyBuckets"             #全ての自分のバケットの一覧
+              - "s3:GetBucketLocation"            #バケットの中身をもらい受ける
+            Resource: "*"            #(どういったコンポーネントを作るか記載)AWSS3の CloudFormation スタックを作成するのと同じ AWS リージョンに Amazon S3 バケットを作成
+          - Effect: Allow                         #効果は許可
+            Action: "*"                           #動作。ワイルドカード
+            Resource:
+              - "arn:aws:s3:::lecture04-426314309004"   #arn:aws:s3:::lecture04-426314309004/に
+              - "arn:aws:s3:::lecture04-426314309004/*" #arn:aws:s3:::lecture04-426314309004/を含む全て
+      Roles:                                    #アタッチするロール
+        - !Ref S3AccessRole                       #S3アクセスを参照
+
+
+#S3アクセスとインスタンスをつなぐ
+  S3AccessInstanceProfile:                      #IAM ロールを インスタンスに渡す
+    Type: AWS::IAM::InstanceProfile              
+    Properties:                                 #環境変数となる値をまとめて宣言
+      Path: "/"                                 #パスを指定
+      Roles:                                    #アタッチするロール
+      - !Ref S3AccessRole                       #S3アクセスロールを参照
+
+
+#Instanceプロファイルを付与※EC2インスタンスとロールを紐づけるのに、IAMインスタンスプロファイルを記述
+  Instance:                                     #リソースの名前
+    Type: 'AWS::EC2::Instance'                  #EC2インスタンス
+    Properties:
+      IamInstanceProfile: !Ref S3AccessInstanceProfile  #IAM ロールのコンテナ。※インスタンスの起動時に EC2 インスタンスにロール情報を渡すために使用
+      ImageId: ami-01ae6169b82b38e3b           #amiのID最新
+
