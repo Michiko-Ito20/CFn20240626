@@ -15,7 +15,7 @@ Parameters:                                     #スタックを作成または�
 
 
 #DBを作成
-Resources:                                      #どういったコンポーネントを作るか記載
+Resources:                                      #どういったコンポーネントを作るかを記載
   DBInstance:                                   #(リソースの名前)DBインスタンス
     Type: AWS::RDS::DBInstance                  #RDSのインスタンス
     DeletionPolicy: Delete                      #削除権限は削除※SnapshotもRetainも何かしら残るのでこちらを選択
@@ -44,7 +44,7 @@ Resources:                                      #どういったコンポーネ�
     Type: AWS::RDS::DBParameterGroup            #データベースの詳細
     Properties:
       Description: custom paramter group        #カスタムサブネットグループの説明
-      Family: MySQL8.0.26                       #今使っているRDSと一緒
+      Family: mysql8.0                             #今使っているRDSと一緒
       Parameters:
         character_set_database: utf8mb4         #データベースの文字コードUTF-8、動画ファイルはMB4
         character_set_client: utf8mb4           #クライアント(サービスを使う側)の文字コードUTF-8、動画ファイルはMB4
@@ -58,3 +58,4 @@ Outputs:                                        #リソースを追加、変更�
     Value: !Ref DBInstance                      #論理IDを参照
     Export:
       Name: lecture10-DBInstanceID-id           #lecture10という名前のCloudFormationのDBInstanceID
+
