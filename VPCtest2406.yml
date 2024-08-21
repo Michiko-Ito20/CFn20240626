@@ -130,9 +130,9 @@ Resources:
 
 Outputs:                                   #リソースを追加、変更、削除する変更時に出力する内容
   TestVPC:
-    Value: !GetAtt TestVPC.CidrBlock       #【!GetAtt】を用いてCidrBlockを表示
+    Value: !Ref TestVPC                     #論理IDを参照
     Export:
-      Name: lecture10-testVPC-Cidr         #lecture10という名前のCloudFormationのVPC
+      Name: lecture10-testVPC-id            #lecture10という名前のCloudFormationのVPC
 
   publicsubnet01:
     Value: !Ref publicsubnet01             #論理IDを参照
@@ -150,7 +150,7 @@ Outputs:                                   #リソースを追加、変更、削
       Name: lecture10-privatesubnet01-id    #lecture10という名前のCloudFormationのPrivateSubnet01
 
   privatesubnet02:
-    Value:  !Ref  privatesubnet01           #論理IDを参照
+    Value:  !Ref  privatesubnet02           #論理IDを参照
     Export:
       Name: lecture10-privatesubnet02-id    #lecture10という名前のCloudFormationのPrivateSubnet02
 
