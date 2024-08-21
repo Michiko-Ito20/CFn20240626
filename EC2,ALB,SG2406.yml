@@ -21,7 +21,7 @@ Resources:                                        #どういったコンポー�
     Properties:                                   #環境変数となる値をまとめて宣言
       GroupName: TEST-EC2SecurityGroup            #EC2セキュリティグループの名前
       GroupDescription: TEST-EC2SecurityGroup     #グループの説明
-      VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidr=出力名にポートする
+      VpcId: !ImportValue lecture10-testVPC-id  #VPCはlecture10-testVPC-id=出力名にポートする
       SecurityGroupIngress:                       #セキュリティグループを挿入
       - 
         IpProtocol: tcp                           #IPの通信規約
@@ -66,7 +66,7 @@ Resources:                                        #どういったコンポー�
     Type: AWS::EC2::Instance                   #EC2インスタンス
     Properties:
       ImageId: ami-01ae6169b82b38e3b           #amiのID最新
-      KeyName: raisetech_lecture10             #好きな名
+      KeyName: lecuture04                       #使用するキーペア名
       InstanceType: t3.micro                   #インスタスのタイプ(今回は再挑戦で使用したのを採用)
       InstanceInitiatedShutdownBehavior: stop  #インスタンスの削除保護の有効化「停止」(「削除」も選択できる)
       Tenancy: default                         #テナント属性はデフォルト(AWS 基盤側となるハードウェアは他の利用者と共有する状態で提供)
@@ -74,9 +74,9 @@ Resources:                                        #どういったコンポー�
         - AssociatePublicIpAddress: "true"     #ネットワークインターフェイスとIPアドレスを関連付ける
           DeviceIndex: "0"                     #機器の見出し
           SubnetId: !ImportValue lecture10-publicsubnet01-id      #lecture10-publicsubnet01-idに紐づける
-          GroupSet:                            #グループの集合
-            - !Ref EC2SecurityGroup            #TestSecurityGroupからEC2SecurityGroupへ変更
-          PrivateIpAddress: 10.0.1.233         #プライベートIPアドレス指定
+          GroupSet:                             #グループの集合
+            - !Ref EC2SecurityGroup             #TestSecurityGroupからEC2SecurityGroupへ変更
+          PrivateIpAddress: 10.0.0.4          #プライベートIPアドレス指定10.0.1.233。第4オクテッドを4～255の好きな数字にする172.31.0.4。
 
       Tags:
           - Key: Name
@@ -101,7 +101,7 @@ Resources:                                        #どういったコンポー�
     Properties:
         GroupName: !Sub ${AWS::StackName}-alb-sg  #変数名と文字列を結合(AWS::StackNameとalb-sgという名前)
         GroupDescription: ALB SG              #グループの説明、ALB SG
-        VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidr=出力名にポートする
+        VpcId: !ImportValue lecture10-testVPC-id  #VPCはlecture10-testVPC-id=出力名にポートする
         Tags:                                 #紐づけてイン
           - Key: Name
             Value: !Sub ${AWS::StackName}-alb-sg  #変数名と文字列を結合(AWS::StackNameとalb-sgという名前)
@@ -151,7 +151,7 @@ Resources:                                        #どういったコンポー�
       Protocol: HTTP                         #プロトコルを指定
       Matcher:                               #一致するもの
         HttpCode: '200'                      #正しい場合のHTTPコードを指定
-      VpcId: !ImportValue lecture10-testVPC-Cidr  #VPCはlecture10-testVPC-Cidrに紐づけてインポートする
+      VpcId: !ImportValue lecture10-testVPC-id  #VPCはlecture10-testVPC-idに紐づけてインポートする
       TargetType: instance                   #ターゲットタイプはインスタンス
       Targets:
         - Id: !Ref TestEC2Instance           #EC2インスタンスをターゲットのIDとして参照
