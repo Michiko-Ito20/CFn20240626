@@ -43,20 +43,3 @@ Resources:
       Roles:                                    #アタッチするロール
         - !Ref S3AccessRole                       #S3アクセスを参照
 
-
-#S3アクセスとインスタンスをつなぐ
-  S3AccessInstanceProfile:                      #IAM ロールを インスタンスに渡す
-    Type: AWS::IAM::InstanceProfile              
-    Properties:                                 #環境変数となる値をまとめて宣言
-      Path: "/"                                 #パスを指定
-      Roles:                                    #アタッチするロール
-      - !Ref S3AccessRole                       #S3アクセスロールを参照
-
-
-#Instanceプロファイルを付与※EC2インスタンスとロールを紐づけるのに、IAMインスタンスプロファイルを記述
-  Instance:                                     #リソースの名前
-    Type: 'AWS::EC2::Instance'                  #EC2インスタンス
-    Properties:
-      IamInstanceProfile: !Ref S3AccessInstanceProfile  #IAM ロールのコンテナ。※インスタンスの起動時に EC2 インスタンスにロール情報を渡すために使用
-      ImageId: ami-01ae6169b82b38e3b           #amiのID最新
-
