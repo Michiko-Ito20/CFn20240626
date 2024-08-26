@@ -17,13 +17,13 @@
 ### スタックの画像  
 ![画像1](lecuture10image\lecture10-CFn.png)
 ### VPC接続画像 
-![画像2](lecuture10image\lecture10-CFn-VPC.png)
+![画像2](lecuture10image\lecture10-VPC.png)
 ### EC2接続画像  
-![画像3](lecuture10image\lecture10-CFn-EC2.png)
+![画像3](lecuture10image\lecture10-EC2.png)
 ### RDS接続画像  
-![画像4](lecuture10image\lecture10-CFn-RDS.png)
+![画像4](lecuture10image\lecture10-RDS.png)
 ### S3接続画像  
-![画像5](lecuture10image\lecture10-CFn-S3.png)
+![画像5](lecuture10image\lecture10-S3.png)
 
 ##  GitHubについて改めて 
 - YAMLテンプレートの最後は空白行が無いと文字列が終わったと認識しない   
