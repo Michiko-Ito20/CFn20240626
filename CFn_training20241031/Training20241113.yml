@@ -142,24 +142,33 @@
 
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: "AWS CloudTrail S3 Bucket Policy"
+Description: "AWS CloudTrail and AWS Config Setup" 
 
 Resources:
   CloudTrailBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName: !Sub 'aws-cloudtrail-logs-${AWS::AccountId}'
+      LoggingConfiguration:  # サーバーアクセスのログ記録を無効に設定
+        DestinationBucketName: !Ref 'AWS::NoValue'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  # デフォルト暗号化をSSE-S3に設定
+      VersioningConfiguration:
+        Status: 'Suspended'  # バージョニングを無効に設定
       LifecycleConfiguration:
         Rules:
-          - Id: 'CloudTrailLifeCyclePolicy'
-            Status: 'Enabled'
-            ExpirationInDays: 365
-            Transitions:
-              - TransitionInDays: 30
-                StorageClass: 'GLACIER'
           - Id: 'trailsLifeCycle'
             Status: 'Enabled'
-            ExpirationInDays: 366
+            Prefix: ''  # バケット全体を対象とする
+            ExpirationInDays: 366   # 最新バージョンのオブジェクトがアップロードされてから366日後に削除
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true  # 新規のパブリックACLとパブリックオブジェクトのアップロードをブロック
+        IgnorePublicAcls: true  # パブリックACLを通じて付与されたパブリックアクセスを削除
+        BlockPublicPolicy: true  # 新規のパブリックバケットポリシーをブロック
+        RestrictPublicBuckets: true  # パブリックポリシーがある場合のパブリックアクセスとクロスアカウントアクセスをブロック
+      AccessControl: 'BucketOwnerFullControl'
 
   CloudTrailLogGroup:
     Type: 'AWS::Logs::LogGroup'
@@ -186,24 +195,6 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/cloudtrail/*'
-
-  CloudTrail:
-    Type: 'AWS::CloudTrail::Trail'
-    Properties:
-      TrailName: 'trails'
-      S3BucketName: !Ref 'CloudTrailBucket'
-      S3KeyPrefix: !Sub 'AWSLogs/${AWS::AccountId}'
-      IncludeGlobalServiceEvents: true
-      IsLogging: true
-      IsMultiRegionTrail: false
-      EnableLogFileValidation: true
-      CloudWatchLogsLogGroupArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/cloudtrail/${AWS::AccountId}'
-      CloudWatchLogsRoleArn: !GetAtt CloudTrailLogsRole.Arn
-      EventSelectors:
-        - ReadWriteType: 'All'
-          IncludeManagementEvents: true
-          # DataResources: []
-          # ExcludeManagementEventSources: []
 
   CloudTrailBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -238,6 +229,24 @@ Resources:
             }
           ]
         }
+
+  CloudTrail:
+    Type: 'AWS::CloudTrail::Trail'
+    Properties:
+      TrailName: 'trails'
+      S3BucketName: !Ref 'CloudTrailBucket'
+      S3KeyPrefix: !Sub 'AWSLogs/${AWS::AccountId}'
+      IncludeGlobalServiceEvents: true
+      IsLogging: true
+      IsMultiRegionTrail: false
+      EnableLogFileValidation: true
+      CloudWatchLogsLogGroupArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/cloudtrail/${AWS::AccountId}'
+      CloudWatchLogsRoleArn: !GetAtt CloudTrailLogsRole.Arn
+      EventSelectors:
+        - ReadWriteType: 'All'
+          IncludeManagementEvents: true
+          # DataResources: []
+          # ExcludeManagementEventSources: []
 
 
   ConfigBucket:
@@ -333,3 +342,50 @@ Resources:
       ConfigSnapshotDeliveryProperties:
         DeliveryFrequency: 'One_Hour'
 
+
+
+LogicalID:
+  Type: AWS::CloudTrail::Trail
+  Properties:
+    AdvancedEventSelectors: 
+      - FieldSelectors:
+          - EndsWith:
+              - "String"
+            Equals:
+              - "String"
+            Field: "String"
+            NotEndsWith:
+              - "String"
+            NotEquals:
+              - "String"
+            NotStartsWith:
+              - "String"
+            StartsWith:
+              - "String"
+        Name: "String"
+    CloudWatchLogsLogGroupArn: "String"
+    CloudWatchLogsRoleArn: "String"
+    EnableLogFileValidation: false
+    EventSelectors: 
+      - DataResources:
+          - Type: "String"
+            Values:
+              - "String"
+        ExcludeManagementEventSources:
+          - "String"
+        IncludeManagementEvents: false
+        ReadWriteType: "String"
+    IncludeGlobalServiceEvents: false
+    InsightSelectors: 
+      - InsightType: "String"
+    IsLogging: false # Required
+    IsMultiRegionTrail: false
+    IsOrganizationTrail: false
+    KMSKeyId: "String"
+    S3BucketName: "String" # Required
+    S3KeyPrefix: "String"
+    SnsTopicName: "String"
+    Tags: 
+      - Key: "String"
+        Value: "String"
+    TrailName: "String"
