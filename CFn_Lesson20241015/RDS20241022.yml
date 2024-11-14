@@ -59,12 +59,14 @@ Resources:
       DBInstanceClass: db.t3.micro
       DBParameterGroupName: !Ref DBParameterGroup
       DBSubnetGroupName: !Ref DBSubnetGroup
-      Engine: MySQL   
-      EngineVersion: 8.0.35   
-      MasterUsername: admin    
-      MasterUserPassword: your_secret    
-      StorageType: gp2 
-#後でSecurityグループを組んでみるSecurityグループは仕事ではデフォルト
+      Parameters:
+        Engine: MySQL   
+        EngineVersion: 8.0.35   
+        MasterUsername: admin    
+        MasterUserPassword: your_secret    
+        StorageType: gp2 
+# 後でSecurityグループを自分で作成する
+# Securityグループを作成するのは業務ではスタンダード
 
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
@@ -85,7 +87,9 @@ Resources:
         character_set_results: utf8mb4
         character_set_server: utf8mb4
         character_set_client: utf8mb4
-#      DBParameterGroupFamily: mysql8.0とFamilyだけはどっちが良いのか？
+# DBParameterGroupFamily:とFamily:はどちらでも動くが、どちらが正解か？
+# 公式ドキュメントによるとどっちも合ってる https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbparametergroup.html
+# Copilotによると、DBParameterGroupFamily:という表現を使うほうが多いとのこと
   
 Outputs:
   DBInstance:
