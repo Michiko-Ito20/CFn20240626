@@ -241,5 +241,68 @@ Resources:
         }
 
 
+  ConfigBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'aws-config-logs-${AWS::AccountId}'
+      LifecycleConfiguration:
+        Rules:
+          - Id: 'configLogsLifeCycle'
+            Status: 'Enabled'
+            ExpirationInDays: 2557
+
+  ConfigBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref 'ConfigBucket'
+      PolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+                {
+                    "Sid": "AWSConfigBucketPermissionsCheck",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "config.amazonaws.com"
+                    },
+                    "Action": "s3:GetBucketAcl",
+                    "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+                    "Condition": {
+                        "StringEquals": {
+                            "AWS:SourceAccount": "${AWS::AccountId}"
+                        }
+                    }
+                },
+                {
+                    "Sid": "AWSConfigBucketExistenceCheck",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "config.amazonaws.com"
+                    },
+                    "Action": "s3:ListBucket",
+                    "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+                    "Condition": {
+                        "StringEquals": {
+                            "AWS:SourceAccount": "${AWS::AccountId}"
+                        }
+                    }
+                },
+                {
+                    "Sid": "AWSConfigBucketDelivery",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "config.amazonaws.com"
+                    },
+                    "Action": "s3:PutObject",
+                    "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*",
+                    "Condition": {
+                        "StringEquals": {
+                            "AWS:SourceAccount": "${AWS::AccountId}",
+                            "s3:x-amz-acl": "bucket-owner-full-control"
+                        }
+                    }
+                }
+            ]
+        }
 
 
