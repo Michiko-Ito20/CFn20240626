@@ -214,8 +214,7 @@ Resources:
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "AWSTrailLogsBucketPermissionsCheck",      LogFileValidationEnabled: true
-
+              "Sid": "AWSTrailLogsBucketPermissionsCheck", 
               "Effect": "Allow",
               "Principal": {
                   "Service": "cloudtrail.amazonaws.com"
