@@ -209,19 +209,13 @@ Resources:
     Properties:
       TrailName: 'trails'
       S3BucketName: !Ref 'CloudTrailBucket'
-      S3KeyPrefix: !Sub 'AWSLogs/${AWS::AccountId}'
       IncludeGlobalServiceEvents: true
       IsLogging: true
-      IsMultiRegionTrail: false
       EnableLogFileValidation: true
-      CloudWatchLogsLogGroupArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/cloudtrail/${AWS::AccountId}'
-      CloudWatchLogsRoleArn: !GetAtt CloudTrailLogsRole.Arn
+      IsMultiRegionTrail: false
       EventSelectors:
         - ReadWriteType: 'All'
           IncludeManagementEvents: true
-          # DataResources: []
-          # ExcludeManagementEventSources: []
-
 
   ConfigBucket:
     Type: 'AWS::S3::Bucket'
