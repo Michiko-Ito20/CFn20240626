@@ -170,32 +170,6 @@ Resources:
         RestrictPublicBuckets: true  # パブリックポリシーがある場合のパブリックアクセスとクロスアカウントアクセスをブロック
       AccessControl: 'BucketOwnerFullControl'
 
-  CloudTrailLogGroup:
-    Type: 'AWS::Logs::LogGroup'
-    Properties:
-      LogGroupName: !Sub '/aws/cloudtrail/${AWS::AccountId}'
-
-  CloudTrailLogsRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Service: 'cloudtrail.amazonaws.com'
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: 'CloudTrailLogsPolicy'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: 'Allow'
-                Action:
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/cloudtrail/*'
-
   CloudTrailBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
