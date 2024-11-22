@@ -149,25 +149,25 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName: !Sub 'aws-cloudtrail-logs-${AWS::AccountId}'
-      LoggingConfiguration:  # サーバーアクセスのログ記録を無効に設定
+      LoggingConfiguration: 
         DestinationBucketName: !Ref 'AWS::NoValue'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: 'AES256'  # デフォルト暗号化をSSE-S3に設定
+              SSEAlgorithm: 'AES256'  
       VersioningConfiguration:
-        Status: 'Suspended'  # バージョニングを無効に設定
+        Status: 'Suspended'  
       LifecycleConfiguration:
         Rules:
           - Id: 'trailsLifeCycle'
             Status: 'Enabled'
-            Prefix: ''  # バケット全体を対象とする
-            ExpirationInDays: 366   # 最新バージョンのオブジェクトがアップロードされてから366日後に削除
+            Prefix: ''  
+            ExpirationInDays: 366 
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: true  # 新規のパブリックACLとパブリックオブジェクトのアップロードをブロック
-        IgnorePublicAcls: true  # パブリックACLを通じて付与されたパブリックアクセスを削除
-        BlockPublicPolicy: true  # 新規のパブリックバケットポリシーをブロック
-        RestrictPublicBuckets: true  # パブリックポリシーがある場合のパブリックアクセスとクロスアカウントアクセスをブロック
+        BlockPublicAcls: true  
+        IgnorePublicAcls: true  
+        BlockPublicPolicy: true  
+        RestrictPublicBuckets: true 
       AccessControl: 'BucketOwnerFullControl'
 
   CloudTrailBucketPolicy:
@@ -216,6 +216,7 @@ Resources:
       EventSelectors:
         - ReadWriteType: 'All'
           IncludeManagementEvents: true
+
 
   ConfigBucket:
     Type: 'AWS::S3::Bucket'
