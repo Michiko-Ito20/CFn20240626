@@ -299,6 +299,34 @@ Resources:
             ]
         }
 
+  ConfigDeliveryChannel:
+    Type: 'AWS::Config::DeliveryChannel' 
+    Properties:
+      S3BucketName: !Ref 'ConfigBucket'
+      Name: 'default'
+
+  ConfigRecorder:
+    Type: 'AWS::Config::ConfigurationRecorder' 
+    Properties:
+      RoleARN: !GetAtt ConfigRole.Arn 
+      RecordingGroup:
+        AllSupported: true  
+        IncludeGlobalResourceTypes: true　
+
+  ConfigRole:
+    Type: 'AWS::IAM::Role' 
+    Properties:
+      RoleName: 'config-role-ap-northeast-1' 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17' 
+        Statement:
+          - Effect: 'Allow' 
+            Principal:
+              Service: 'config.amazonaws.com'  
+            Action: 'sts:AssumeRole' 
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSConfigRole' 
+
   ConfigRole:
     Type: 'AWS::IAM::Role'
     Properties:
