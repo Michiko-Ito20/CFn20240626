@@ -168,7 +168,6 @@ Resources:
         IgnorePublicAcls: true  
         BlockPublicPolicy: true  
         RestrictPublicBuckets: true 
-      AccessControl: 'BucketOwnerFullControl'
 
   CloudTrailBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -312,49 +311,3 @@ Resources:
         DeliveryFrequency: 'One_Hour'
 
 
-
-LogicalID:
-  Type: AWS::CloudTrail::Trail
-  Properties:
-    AdvancedEventSelectors: 
-      - FieldSelectors:
-          - EndsWith:
-              - "String"
-            Equals:
-              - "String"
-            Field: "String"
-            NotEndsWith:
-              - "String"
-            NotEquals:
-              - "String"
-            NotStartsWith:
-              - "String"
-            StartsWith:
-              - "String"
-        Name: "String"
-    CloudWatchLogsLogGroupArn: "String"
-    CloudWatchLogsRoleArn: "String"
-    EnableLogFileValidation: false
-    EventSelectors: 
-      - DataResources:
-          - Type: "String"
-            Values:
-              - "String"
-        ExcludeManagementEventSources:
-          - "String"
-        IncludeManagementEvents: false
-        ReadWriteType: "String"
-    IncludeGlobalServiceEvents: false
-    InsightSelectors: 
-      - InsightType: "String"
-    IsLogging: false # Required
-    IsMultiRegionTrail: false
-    IsOrganizationTrail: false
-    KMSKeyId: "String"
-    S3BucketName: "String" # Required
-    S3KeyPrefix: "String"
-    SnsTopicName: "String"
-    Tags: 
-      - Key: "String"
-        Value: "String"
-    TrailName: "String"
