@@ -221,11 +221,29 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName: !Sub 'aws-config-logs-${AWS::AccountId}'
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'AWS::NoValue' 
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  
+      VersioningConfiguration:
+        Status: 'Suspended'  
+      ObjectLockEnabled: false 
       LifecycleConfiguration:
         Rules:
-          - Id: 'configLogsLifeCycle'
+          - Id: 'DisableNoncurrentVersionTransition'
             Status: 'Enabled'
-            ExpirationInDays: 2557
+            Filter:
+              And:
+                Prefix: 'logs/'
+                Tags:
+                  - Key: 'lifecycle'
+                    Value: 'archival'
+            ExpirationInDays: 2557  
+            NoncurrentVersionTransitions:
+              - StorageClass: 'DEEP_ARCHIVE'
+                TransitionInDays: null 
 
   ConfigBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
