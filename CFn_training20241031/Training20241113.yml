@@ -232,18 +232,10 @@ Resources:
       ObjectLockEnabled: false 
       LifecycleConfiguration:
         Rules:
-          - Id: 'DisableNoncurrentVersionTransition'
+          - Id: 'configLogsLifeCycle'
             Status: 'Enabled'
-            Filter:
-              And:
-                Prefix: 'logs/'
-                Tags:
-                  - Key: 'lifecycle'
-                    Value: 'archival'
-            ExpirationInDays: 2557  
-            NoncurrentVersionTransitions:
-              - StorageClass: 'DEEP_ARCHIVE'
-                TransitionInDays: null 
+            Prefix: 'AWSLogs/'
+            ExpirationInDays: 2557
 
   ConfigBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -298,6 +290,7 @@ Resources:
                 }
             ]
         }
+
 
   ConfigDeliveryChannel:
     Type: 'AWS::Config::DeliveryChannel' 
