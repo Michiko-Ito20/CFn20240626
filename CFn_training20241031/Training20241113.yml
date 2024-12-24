@@ -296,7 +296,7 @@ Resources:
     Type: 'AWS::Config::DeliveryChannel' 
     Properties:
       S3BucketName: !Ref 'ConfigBucket'
-      Name: 'default'
+      Name: !Sub '${AWS::StackName}-delivery-channel'
 
   ConfigRecorder:
     Type: 'AWS::Config::ConfigurationRecorder' 
@@ -319,4 +319,5 @@ Resources:
             Action: 'sts:AssumeRole' 
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'
+
 
