@@ -173,8 +173,9 @@ Resources:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
       Bucket: !Ref 'CloudTrailBucket'
-      PolicyDocument: !Sub |
-        {
+      PolicyDocument:
+        Fn::Sub: |
+          {
           "Version": "2012-10-17",
           "Statement": [
             {
@@ -201,10 +202,11 @@ Resources:
               }
             }
           ]
-        }
+          }
 
   CloudTrail:
     Type: 'AWS::CloudTrail::Trail'
+    DependsOn: 'CloudTrailBucketPolicy'
     Properties:
       TrailName: 'trails'
       S3BucketName: !Ref 'CloudTrailBucket'
@@ -290,7 +292,6 @@ Resources:
                 }
             ]
         }
-
 
   ConfigDeliveryChannel:
     Type: 'AWS::Config::DeliveryChannel' 
