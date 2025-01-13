@@ -1,0 +1,157 @@
+################
+# 添付の設計書（Markdown）を満たすCFnテンプレートを作成しなさい。
+# mainブランチから新規ブランチを作成して開発を行うこと.
+# 添付資料の公開、GitHubへの投入は禁止する
+# 作成するテンプレートは1ファイルで構わない（分割しなくてよい）
+# 構築されたリソースすべてが要件を満たしていることが終了条件
+# 中間提出も可とするが、提出方式はPRとし、レビューが終わったら都度マージすること。レビュー依頼時にはレビュアーがレビューすべき点をPR依頼文に記載すること。
+#/```
+#{
+#    "Version": "2012-10-17",
+#    "Statement": [
+#        {
+#            "Sid": "AWSTrailLogsBucketPermissionsCheck",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "cloudtrail.amazonaws.com"
+#            },
+#            "Action": "s3:GetBucketAcl",
+#            "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}"
+#        },
+#        {
+#            "Sid": "AWSTrailLogsBucketDelivery",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "cloudtrail.amazonaws.com"
+#            },
+#            "Action": "s3:PutObject",
+#            "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/*",
+#            "Condition": {
+#                "StringEquals": {
+#                    "s3:x-amz-acl": "bucket-owner-full-control"
+#                }
+#            }
+#        }
+#    ]
+#}
+#/```
+# /```
+# {
+#    "Version": "2012-10-17",
+#    "Statement": [
+#        {
+#            "Sid": "AWSConfigBucketPermissionsCheck",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "config.amazonaws.com"
+#            },
+#            "Action": "s3:GetBucketAcl",
+#            "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+#            "Condition": {
+#                "StringEquals": {
+#                    "AWS:SourceAccount": "${AWS::AccountId}"
+#                }
+#            }
+#        },
+#        {
+#            "Sid": "AWSConfigBucketExistenceCheck",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "config.amazonaws.com"
+#            },
+#            "Action": "s3:ListBucket",
+#            "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+#            "Condition": {
+#                "StringEquals": {
+#                    "AWS:SourceAccount": "${AWS::AccountId}"
+#                }
+#            }
+#        },
+#        {
+#            "Sid": "AWSConfigBucketDelivery",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "config.amazonaws.com"
+#            },
+#            "Action": "s3:PutObject",
+#            "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*",
+#            "Condition": {
+#                "StringEquals": {
+#                    "AWS:SourceAccount": "${AWS::AccountId}",
+#                    "s3:x-amz-acl": "bucket-owner-full-control"
+#                }
+#            }
+#        }
+#    ]
+#}
+#/```
+################
+
+# Parameters:参照するものが無いのでいらない
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "AWS CloudTrail S3 Bucket Policy"
+
+Resources:
+  AWSTrailLogsBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Sub 'aws-cloudtrail-logs-${AWS::AccountId}'
+
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSTrailLogsBucketPermissionsCheck
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !Sub 'arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}'
+          - Sid: AWSTrailLogsBucketDelivery
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub 'arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/*'
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+
+  AWSConfigBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Sub 'aws-config-logs-${AWS::AccountId}'
+
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSConfigBucketPermissionsCheck
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !Sub 'arn:aws:s3:::aws-config-logs-${AWS::AccountId}'
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub '${AWS::AccountId}'
+          - Sid: AWSConfigBucketExistenceCheck
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: s3:ListBucket
+            Resource: !Sub 'arn:aws:s3:::aws-config-logs-${AWS::AccountId}'
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub '${AWS::AccountId}'
+          - Sid: AWSConfigBucketDelivery
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub 'arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*'
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub '${AWS::AccountId}'
+                s3:x-amz-acl: bucket-owner-full-control
+

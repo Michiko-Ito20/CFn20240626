@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+################
+# VPC:
+#   CidrBlock:  10.0.0.0/16
+#   Key: Name
+# Value: lecture10-VPC
+# privateSubnet 
+#    Properties:
+#      CidrBlock: 10.0.1.0/24
+#      AvailabilityZone: ap-northeast-1a
+# publicSubnet 
+#    Properties:
+#      CidrBlock: 10.0.1.0/24
+#      AvailabilityZone: ap-northeast-1c
+################
+
+
+Description: |
+  lecture10-CFnVPC241022  
+  
+Resources:
+  TestVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0/16
+      Tags: 
+        - Key: Name
+          Value: lecture10-VPC
+
+  TestIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: lecture10-IGW
+
+  TestAttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref TestVPC
+      InternetGatewayId: !Ref TestIGW
+
+  privateSubnet01:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: ap-northeast-1a
+      VpcId: !Ref TestVPC
+      Tags: 
+        - Key: Name
+          Value: lecture10-privateSubnet01
+
+  publicSubnet01:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: ap-northeast-1c
+      VpcId: !Ref TestVPC
+      Tags: 
+        - Key: Name
+          Value: lecture10-publicSubnet01
+
+  privatesubnet02:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: ap-northeast-1b
+      VpcId: !Ref TestVPC
+      Tags: 
+        - Key: Name
+          Value: lecture10-privateSubnet02
+
+  publicSubnet02:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: ap-northeast-1c
+      VpcId: !Ref TestVPC
+      Tags: 
+        - Key: Name
+          Value: lecture10-publicSubnet02
+
+  TestRT01:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref TestVPC
+      Tags: 
+        - Key: Name
+          Value: lecture10-RT01
+
+  TestRT02:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref TestVPC
+      Tags: 
+        - Key: Name
+          Value: lecture10-RT02
+
+  TestRoutePublic:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref TestRT01
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref TestIGW
+
+#  EC2-RouteTable-private:
+#    Type: AWS::EC2::Route
+#    Properties:
+#      RouteTableId: !Ref TestRT02
+#      NatGatewayId: !Ref TestNatGateway01
+
+  TestRTAssociation01:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref privateSubnet01
+      RouteTableId: !Ref TestRT02
+
+  TestRTAssociation02:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref publicSubnet01
+      RouteTableId: !Ref TestRT01
+
+  TestRTAssociation03:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref privatesubnet02
+      RouteTableId: !Ref TestRT02
+
+  TestRTAssociation04:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref publicSubnet02
+      RouteTableId: !Ref TestRT01
+
+Outputs:
+  TestVPC:
+    Value: !Ref TestVPC
+    Export:
+      Name: TestVPC
+
+  TestIGW:
+    Value: !Ref TestIGW
+    Export:
+      Name: TestIGW
+
+  privateSubnet01:
+    Value: !Ref privateSubnet01
+    Export:
+      Name: privateSubnet01
+
+  publicSubnet01:
+    Value: !Ref publicSubnet01
+    Export:
+      Name: publicSubnet01
+
+  privatesubnet02:
+    Value: !Ref privatesubnet02
+    Export:
+      Name: privatesubnet02
+
+  publicSubnet02:
+    Value: !Ref publicSubnet02
+    Export:
+      Name: publicSubnet02

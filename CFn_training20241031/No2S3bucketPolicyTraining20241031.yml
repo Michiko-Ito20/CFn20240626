@@ -1,0 +1,101 @@
+################
+# /```
+# {
+#    "Version": "2012-10-17",
+#    "Statement": [
+#        {
+#            "Sid": "AWSConfigBucketPermissionsCheck",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "config.amazonaws.com"
+#            },
+#            "Action": "s3:GetBucketAcl",
+#            "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+#            "Condition": {
+#                "StringEquals": {
+#                    "AWS:SourceAccount": "${AWS::AccountId}"
+#                }
+#            }
+#        },
+#        {
+#            "Sid": "AWSConfigBucketExistenceCheck",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "config.amazonaws.com"
+#            },
+#            "Action": "s3:ListBucket",
+#            "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+#            "Condition": {
+#                "StringEquals": {
+#                    "AWS:SourceAccount": "${AWS::AccountId}"
+#                }
+#            }
+#        },
+#        {
+#            "Sid": "AWSConfigBucketDelivery",
+#            "Effect": "Allow",
+#            "Principal": {
+#                "Service": "config.amazonaws.com"
+#            },
+#            "Action": "s3:PutObject",
+#            "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*",
+#            "Condition": {
+#                "StringEquals": {
+#                    "AWS:SourceAccount": "${AWS::AccountId}",
+#                    "s3:x-amz-acl": "bucket-owner-full-control"
+#                }
+#            }
+#        }
+#    ]
+#}
+#/```
+################
+
+# Parameters:
+# Resources:
+# Outputs:
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: AWS CloudFormation Template for AWS Config Bucket Policy
+
+Resources:
+  AWSConfigBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Sub 'aws-config-logs-${AWS::AccountId}'
+
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSConfigBucketPermissionsCheck
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !Sub 'arn:aws:s3:::aws-config-logs-${AWS::AccountId}'
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub '${AWS::AccountId}'
+          - Sid: AWSConfigBucketExistenceCheck
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: s3:ListBucket
+            Resource: !Sub 'arn:aws:s3:::aws-config-logs-${AWS::AccountId}'
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub '${AWS::AccountId}'
+          - Sid: AWSConfigBucketDelivery
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub 'arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*'
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub '${AWS::AccountId}'
+                s3:x-amz-acl: bucket-owner-full-control
+
+# Outputs:　指示がなくても参照できるようにOutputsしておく方が良いのか？
+
