@@ -10,7 +10,7 @@ Resources:
     Properties:
       BucketName: 
         Fn::Sub: 'aws-cloudtrail-logs-${AWS::AccountId}'
-      LoggingConfiguration: 
+      # LoggingConfiguration: 
         # DestinationBucketName: !Ref 'AWS::NoValue'　特に指定されていないと言う意味なのでデフォルトのままでOK
       BucketEncryption:
         ServerSideEncryptionConfiguration:
@@ -85,7 +85,7 @@ Resources:
     Properties:
       BucketName: 
         Fn::Sub: 'aws-config-logs-${AWS::AccountId}'
-      LoggingConfiguration:
+      # LoggingConfiguration:
         # DestinationBucketName: !Ref 'AWS::NoValue' 　特に指定されていないと言う意味なのでデフォルトのままでOK
       BucketEncryption:
         ServerSideEncryptionConfiguration:
