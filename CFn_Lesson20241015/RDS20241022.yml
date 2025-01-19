@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: |
+  lecture10-CFn-RDS
+
+##########################
+#  TestEC2Instanc:
+#    Value: !Ref EC2Instance
+#    Export:
+#      Name: lecture10-TestEC2Instance-id
+#  TestVPC:
+#    Value: !Ref TestVPC
+#    Export:
+#      Name: TestVPC  
+#  privateSubnet01:
+#    Value: !Ref privateSubnet01
+#    Export:
+#      Name: privateSubnet01
+#  privateSubnet02:
+#    Value: !Ref privateSubnet02
+#    Export:
+#      Name: privateSubnet02
+
+#DBInstance: 
+#  AllocatedStorage: '20' 
+#  DBInstanceClass: db.t3.micro
+#  DBParameterGroupName: !Ref DBParameterGroup
+#  DBSubnetGroupName: !Ref DBSubnetGroup
+#  Engine: MySQL   
+#  EngineVersion: 8.0.35   
+#  MasterUsername: admin    
+#  MasterUserPassword: your_secret    
+#  StorageType: gp2 
+
+#  DBSubnetGroup:
+#    Properties:
+#      DBSubnetGroupDescription: custom subnet group
+#      SubnetIds:             
+#        - !ImportValue lecture10-privatesubnet01-id 
+#        - !ImportValue lecture10-privatesubnet02-id
+##########################
+
+Parameters:
+  TestVPC:
+    Type: String
+  
+  privateSubnet01:
+    Type: String
+  
+  privateSubnet02:
+    Type: String
+  
+Resources:
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties: 
+      AllocatedStorage: '20' 
+      DBInstanceClass: db.t3.micro
+      DBParameterGroupName: !Ref DBParameterGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Parameters:
+        Engine: MySQL   
+        EngineVersion: 8.0.35   
+        MasterUsername: admin    
+        MasterUserPassword: your_secret    
+        StorageType: gp2 
+# 後でSecurityグループを自分で作成する
+# Securityグループを作成するのは業務ではスタンダード
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: custom subnet group
+      SubnetIds:             
+        - !Ref privateSubnet01
+        - !Ref privateSubnet02
+
+  DBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: Custom DB Parameter Group
+      Family: mysql8.0
+      Parameters:
+        character_set_database: utf8mb4
+        character_set_connnection: utf8mb4
+        character_set_results: utf8mb4
+        character_set_server: utf8mb4
+        character_set_client: utf8mb4
+# DBParameterGroupFamily:とFamily:はどちらでも動くが、どちらが正解か？
+# 公式ドキュメントによるとどっちも合ってる https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbparametergroup.html
+# Copilotによると、DBParameterGroupFamily:という表現を使うほうが多いとのこと
+  
+Outputs:
+  DBInstance:
+    Value: !Ref DBInstance
+    Export:
+      Name: lecture10-DBInstance-id
+

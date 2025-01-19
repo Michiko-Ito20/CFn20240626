@@ -1,0 +1,191 @@
+# Parameters:参照するものが無いのでいらない
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "AWS CloudTrail and AWS Config Setup" 
+
+Resources:
+  CloudTrailBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: 
+        Fn::Sub: 'aws-cloudtrail-logs-${AWS::AccountId}'
+      # LoggingConfiguration: 
+        # DestinationBucketName: !Ref 'AWS::NoValue'　特に指定されていないと言う意味なのでデフォルトのままでOK
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  
+      VersioningConfiguration:
+        Status: 'Suspended'  
+      LifecycleConfiguration:
+        Rules:
+          - Id: 'trailsLifeCycle'
+            Status: 'Enabled'
+            Prefix: ''  
+            ExpirationInDays: 366 
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true  
+        IgnorePublicAcls: true  
+        BlockPublicPolicy: true  
+        RestrictPublicBuckets: true 
+
+  CloudTrailBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref 'CloudTrailBucket'
+      PolicyDocument:
+        Fn::Sub: |
+          {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AWSTrailLogsBucketPermissionsCheck", 
+              "Effect": "Allow",
+              "Principal": {
+                  "Service": "cloudtrail.amazonaws.com"
+              },
+              "Action": "s3:GetBucketAcl",
+              "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}"
+          },
+          {
+              "Sid": "AWSTrailLogsBucketDelivery",
+              "Effect": "Allow",
+              "Principal": {
+                  "Service": "cloudtrail.amazonaws.com"
+              },
+              "Action": "s3:PutObject",
+              "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/*",
+              "Condition": {
+                  "StringEquals": {
+                      "s3:x-amz-acl": "bucket-owner-full-control"
+                  }
+              }
+            }
+          ]
+          }
+
+  CloudTrail:
+    Type: 'AWS::CloudTrail::Trail'
+    DependsOn: 'CloudTrailBucketPolicy'
+    Properties:
+      TrailName: 'trails'
+      S3BucketName: !Ref 'CloudTrailBucket'
+      IncludeGlobalServiceEvents: true
+      IsLogging: true
+      EnableLogFileValidation: true
+      IsMultiRegionTrail: false
+      EventSelectors:
+        - ReadWriteType: 'All'
+          IncludeManagementEvents: true
+
+
+  ConfigBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: 
+        Fn::Sub: 'aws-config-logs-${AWS::AccountId}'
+      # LoggingConfiguration:
+        # DestinationBucketName: !Ref 'AWS::NoValue' 　特に指定されていないと言う意味なのでデフォルトのままでOK
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  
+      VersioningConfiguration:
+        Status: 'Suspended'  
+      ObjectLockEnabled: false 
+      LifecycleConfiguration:
+        Rules:
+          - Id: 'configLogsLifeCycle'
+            Status: 'Enabled'
+            Prefix: 'AWSLogs/'
+            ExpirationInDays: 2557
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true  
+        IgnorePublicAcls: true  
+        BlockPublicPolicy: true  
+        RestrictPublicBuckets: true 
+
+  ConfigBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref 'ConfigBucket'
+      PolicyDocument:
+        Fn::Sub: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AWSConfigBucketPermissionsCheck",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "config.amazonaws.com"
+                },
+                "Action": "s3:GetBucketAcl",
+                "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceAccount": "${AWS::AccountId}"
+                  }
+                }
+              },
+              {
+                "Sid": "AWSConfigBucketExistenceCheck",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "config.amazonaws.com"
+                },
+                "Action": "s3:ListBucket",
+                "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceAccount": "${AWS::AccountId}"
+                  }
+                }
+              },
+              {
+                "Sid": "AWSConfigBucketDelivery",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "config.amazonaws.com"
+                },
+                "Action": "s3:PutObject",
+                "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceAccount": "${AWS::AccountId}",
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                  }
+                }
+              }
+            ]
+          }
+
+  ConfigDeliveryChannel:
+    Type: 'AWS::Config::DeliveryChannel' 
+    Properties:
+      S3BucketName: !Ref 'ConfigBucket'
+      Name: 
+        Fn::Sub: '${AWS::StackName}-delivery-channel'
+
+  ConfigRecorder:
+    Type: 'AWS::Config::ConfigurationRecorder' 
+    Properties:
+      RoleARN: !GetAtt ConfigRole.Arn 
+      RecordingGroup:
+        AllSupported: true  
+        IncludeGlobalResourceTypes: true
+
+  ConfigRole:
+    Type: 'AWS::IAM::Role' 
+    Properties:
+      RoleName: 'config-role-ap-northeast-1' 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17' 
+        Statement:
+          - Effect: 'Allow' 
+            Principal:
+              Service: 'config.amazonaws.com'  
+            Action: 'sts:AssumeRole' 
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'
