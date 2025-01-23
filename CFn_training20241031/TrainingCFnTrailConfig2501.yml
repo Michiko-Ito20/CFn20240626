@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "AWS CloudTrail and AWS Config Setup"
+
+Resources:
+  CloudTrail:
+    Type: 'AWS::CloudTrail::Trail'
+    Properties:
+      TrailName: 'trails'
+      S3BucketName: !Ref 'CloudTrailBucket'
+      IncludeGlobalServiceEvents: true
+      IsLogging: true
+      EnableLogFileValidation: true # ログファイルの検証が有効
+      IsMultiRegionTrail: false
+      EventSelectors:
+        - ReadWriteType: 'All'  # イベント: 管理イベント
+          IncludeManagementEvents: true # 管理イベント: APIアクティビティ( 読み取り、書き取り)
+      # KmsKeyId: !Ref 'AWS::NoValue'  # ログファイルの SSE-KMS 暗号化が無効、AWS::NoValueであれば不要
+      SnsTopicName: !Ref 'AWS::NoValue'  # SNS 通知の配信が無効
+      CloudWatchLogsLogGroupArn: !Ref 'AWS::NoValue'  # CloudWatch Logs が無効
+      Tags: []  # タグがなし
+      # プレフィックスが設定されていないことを示すため、以下の行をコメントアウトまたは削除
+      # S3KeyPrefix: ''  # プレフィックスが設定されていない場合
+
