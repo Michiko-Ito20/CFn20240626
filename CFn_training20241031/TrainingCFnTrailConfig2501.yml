@@ -101,3 +101,13 @@ Resources:
         AllSupported: true  # 記録するリソース: すべてのリソース
         IncludeGlobalResourceTypes: true
     # データ保持期間はデフォルトが7年
+
+  ConfigDeliveryChannel:
+    Type: 'AWS::Config::DeliveryChannel'
+    Properties:
+      S3BucketName: !Sub 'aws-config-logs-${AWS::AccountId}'  # Amazon S3 バケット: aws-config-logs-${AWS::AccountId}
+      SnsTopicARN: !Ref 'AWS::NoValue'  # Amazon SNS トピック: 設定なし
+      ConfigSnapshotDeliveryProperties:
+        DeliveryFrequency: 'One_Hour'
+
+
