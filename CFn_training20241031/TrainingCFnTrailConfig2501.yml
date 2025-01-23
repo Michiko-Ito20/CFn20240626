@@ -56,4 +56,40 @@ Resources:
         BlockPublicPolicy: true  # 新規のパブリックバケットポリシーをブロックする (推奨)
         RestrictPublicBuckets: true  # バケットにパブリックポリシーがある場合、パブリックアクセスとクロスアカウントアクセスをブロックする (推奨)
 
+  CloudTrailBucketPolicy:
+      Type: 'AWS::S3::BucketPolicy'
+      Properties:
+        Bucket: !Ref 'CloudTrailBucket'
+        PolicyDocument:
+          Fn::Sub: |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "AWSTrailLogsBucketPermissionsCheck",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "cloudtrail.amazonaws.com"
+                  },
+                  "Action": "s3:GetBucketAcl",
+                  "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}"
+                },
+                {
+                  "Sid": "AWSTrailLogsBucketDelivery",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "cloudtrail.amazonaws.com"
+                  },
+                  "Action": "s3:PutObject",
+                  "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/*",
+                  "Condition": {
+                    "StringEquals": {
+                      "s3:x-amz-acl": "bucket-owner-full-control"
+                    }
+                  }
+                }
+              ]
+            }
+
+
 
