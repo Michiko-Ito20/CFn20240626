@@ -124,4 +124,40 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'  # Managed Policies: AWS_ConfigRole
 
+  ConfigBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName:
+        Fn::Sub: 'aws-config-logs-${AWS::AccountId}'  # バケット名: aws-config-logs-${AWS::AccountId}
+# リージョンの設定は、CloudFormationテンプレートでは直接指定することはできません。リージョンはスタックをデプロイする際に指定されるため、テンプレート内で明示的に設定する必要はありません
+      BucketEncryption:  # デフォルト暗号化: SSE-S3
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  # SSE-S3
+      VersioningConfiguration:
+        Status: 'Suspended'  # バージョニング: Disabled
+      LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
+        DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
+      ObjectLockEnabled: false  # オブジェクトのロック: Disabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: 'configLifeCycle'
+            Status: 'Enabled'
+            Prefix: ''  # Prefix or Tag: バケット全体
+            ExpirationInDays: 2557  # データ保持期間: デフォルト（7年）
+            NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
+            # NoncurrentVersionTransition:  #ストレージクラスの移行が無効（Disabled）であるため、この3行は不要
+            #   - StorageClass: 'GLACIER' 
+            #     TransitionInDays: !Ref 'AWS::NoValue'
+            # AbortIncompleteMultipartUpload: # NoValueなので不要と見て削除
+            #   DaysAfterInitiation: !Ref 'AWS::NoValue'  # 不完全なマルチパートアップロードをクリーンアップする: Disabled
+            ExpiredObjectDeleteMarker: false  # 期限切れのオブジェクト削除マーカーをクリーンアップする: Disabled
+      PublicAccessBlockConfiguration:  # パブリックアクセス設定、システムのアクセス許可の管理
+        BlockPublicAcls: true  # 新規のパブリック ACL と、パブリックオブジェクトのアップロードをブロックする (推奨)
+        IgnorePublicAcls: true  # パブリック ACL を通じて付与されたパブリックアクセスを削除する (推奨)
+        BlockPublicPolicy: true  # 新規のパブリックバケットポリシーをブロックする (推奨)
+        RestrictPublicBuckets: true  # バケットにパブリックポリシーがある場合、パブリックアクセスとクロスアカウントアクセスをブロックする (推奨)
+      # MetricsConfigurations:  # CloudWatch リクエストメトリクス: Disabled
+      #   - Id: 'EntireBucketMetrics' # CloudWatchリクエストメトリクスを無効にするためには、設定自体を削除する。=デフォルトで無効
+      #     Status: 'Disabled'
 
