@@ -5,6 +5,7 @@ Description: "AWS CloudTrail and AWS Config Setup"
 Resources:
   CloudTrail:
     Type: 'AWS::CloudTrail::Trail'
+    DependsOn: 'CloudTrailBucketPolicy'
     Properties:
       TrailName: 'trails'
       S3BucketName: !Ref 'CloudTrailBucket'
