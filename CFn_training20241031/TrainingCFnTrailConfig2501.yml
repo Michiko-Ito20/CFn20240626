@@ -5,7 +5,7 @@ Description: "AWS CloudTrail and AWS Config Setup"
 Resources:
   CloudTrail:
     Type: 'AWS::CloudTrail::Trail'
-    DependsOn: 'CloudTrailBucketPolicy'
+    DependsOn: CloudTrailBucketPolicy
     Properties:
       TrailName: 'trails'
       S3BucketName: !Ref 'CloudTrailBucket'
@@ -17,26 +17,25 @@ Resources:
         - ReadWriteType: 'All'  # イベント: 管理イベント
           IncludeManagementEvents: true # 管理イベント: APIアクティビティ( 読み取り、書き取り)
       # KmsKeyId: !Ref 'AWS::NoValue'  # ログファイルの SSE-KMS 暗号化が無効、AWS::NoValueであれば不要
-      SnsTopicName: !Ref 'AWS::NoValue'  # SNS 通知の配信が無効
-      CloudWatchLogsLogGroupArn: !Ref 'AWS::NoValue'  # CloudWatch Logs が無効
+      # SnsTopicName: !Ref 'AWS::NoValue'  # SNS 通知の配信が無効
+      # CloudWatchLogsLogGroupArn: !Ref 'AWS::NoValue'  # CloudWatch Logs が無効
       Tags: []  # タグがなし
-      # プレフィックスが設定されていないことを示すため、以下の行をコメントアウトまたは削除
-      # S3KeyPrefix: ''  # プレフィックスが設定されていない場合
+      # S3KeyPrefix: ''  # プレフィックスが設定されていない場合コメントアウトまたは削除
 
   CloudTrailBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName:
         Fn::Sub: 'aws-cloudtrail-logs-${AWS::AccountId}'
-# リージョンの設定は、CloudFormationテンプレートでは直接指定することはできません。リージョンはスタックをデプロイする際に指定されるため、テンプレート内で明示的に設定する必要はありません
+# リージョンの設定は、スタックをデプロイする際に指定されるため、明示的に指定しない。
       BucketEncryption:  # デフォルト暗号化: SSE-S3
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: 'AES256'  # SSE-S3
       VersioningConfiguration:
         Status: 'Suspended'  # バージョニング: Disabled
-      LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
-        DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
+      # LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
+      #   DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
       ObjectLockEnabled: false  # オブジェクトのロック: Disabled
       LifecycleConfiguration:
         Rules:
@@ -44,7 +43,7 @@ Resources:
             Status: 'Enabled'
             Prefix: ''  # Prefix or Tag: バケット全体
             ExpirationInDays: 366  # 失効の設定 (最新のバージョン): Enabled (366日後に有効期限切れ)
-            NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
+            # NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
             # NoncurrentVersionTransition:  # ストレージクラスの移行 (過去のバージョン): Disabled
             #   - StorageClass: 'GLACIER' #ストレージクラスの移行が無効（Disabled）であるため、この3行は不要
             #     TransitionInDays: !Ref 'AWS::NoValue'
@@ -107,7 +106,7 @@ Resources:
     Type: 'AWS::Config::DeliveryChannel'
     Properties:
       S3BucketName: !Sub 'aws-config-logs-${AWS::AccountId}'  # Amazon S3 バケット: aws-config-logs-${AWS::AccountId}
-      SnsTopicARN: !Ref 'AWS::NoValue'  # Amazon SNS トピック: 設定なし
+      # SnsTopicARN: !Ref 'AWS::NoValue'  # Amazon SNS トピック: 設定なし
       ConfigSnapshotDeliveryProperties:
         DeliveryFrequency: 'One_Hour'
 
@@ -130,15 +129,15 @@ Resources:
     Properties:
       BucketName:
         Fn::Sub: 'aws-config-logs-${AWS::AccountId}'  # バケット名: aws-config-logs-${AWS::AccountId}
-# リージョンの設定は、CloudFormationテンプレートでは直接指定することはできません。リージョンはスタックをデプロイする際に指定されるため、テンプレート内で明示的に設定する必要はありません
+# リージョンの設定は、スタックをデプロイする際に指定されるため、明示的に指定しない。
       BucketEncryption:  # デフォルト暗号化: SSE-S3
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: 'AES256'  # SSE-S3
       VersioningConfiguration:
         Status: 'Suspended'  # バージョニング: Disabled
-      LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
-        DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
+      # LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
+      #   DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
       ObjectLockEnabled: false  # オブジェクトのロック: Disabled
       LifecycleConfiguration:
         Rules:
@@ -146,7 +145,7 @@ Resources:
             Status: 'Enabled'
             Prefix: ''  # Prefix or Tag: バケット全体
             ExpirationInDays: 2557  # データ保持期間: デフォルト（7年）
-            NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
+            # NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
             # NoncurrentVersionTransition:  #ストレージクラスの移行が無効（Disabled）であるため、この3行は不要
             #   - StorageClass: 'GLACIER' 
             #     TransitionInDays: !Ref 'AWS::NoValue'
