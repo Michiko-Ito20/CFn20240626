@@ -1,0 +1,219 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "AWS CloudTrail and AWS Config Setup"
+
+Resources:
+  CloudTrail:
+    Type: 'AWS::CloudTrail::Trail'
+    DependsOn: CloudTrailBucketPolicy
+    Properties:
+      TrailName: 'trails'
+      S3BucketName: !Ref 'CloudTrailBucket'
+      IncludeGlobalServiceEvents: true
+      IsLogging: true
+      EnableLogFileValidation: true # ログファイルの検証が有効
+      IsMultiRegionTrail: false
+      EventSelectors:
+        - ReadWriteType: 'All'  # イベント: 管理イベント
+          IncludeManagementEvents: true # 管理イベント: APIアクティビティ( 読み取り、書き取り)
+      # KmsKeyId: !Ref 'AWS::NoValue'  # ログファイルの SSE-KMS 暗号化が無効、AWS::NoValueであれば不要
+      # SnsTopicName: !Ref 'AWS::NoValue'  # SNS 通知の配信が無効
+      # CloudWatchLogsLogGroupArn: !Ref 'AWS::NoValue'  # CloudWatch Logs が無効
+      Tags: []  # タグがなし
+      # S3KeyPrefix: ''  # プレフィックスが設定されていない場合コメントアウトまたは削除
+
+  CloudTrailBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName:
+        Fn::Sub: 'aws-cloudtrail-logs-${AWS::AccountId}'
+# リージョンの設定は、スタックをデプロイする際に指定されるため、明示的に指定しない。
+      BucketEncryption:  # デフォルト暗号化: SSE-S3
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  # SSE-S3
+      VersioningConfiguration:
+        Status: 'Suspended'  # バージョニング: Disabled
+      # LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
+      #   DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
+      ObjectLockEnabled: false  # オブジェクトのロック: Disabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: 'trailsLifeCycle'  # trailsLifeCycle
+            Status: 'Enabled'
+            Prefix: ''  # Prefix or Tag: バケット全体
+            ExpirationInDays: 366  # 失効の設定 (最新のバージョン): Enabled (366日後に有効期限切れ)
+            # NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
+            # NoncurrentVersionTransition:  # ストレージクラスの移行 (過去のバージョン): Disabled
+            #   - StorageClass: 'GLACIER' #ストレージクラスの移行が無効（Disabled）であるため、この3行は不要
+            #     TransitionInDays: !Ref 'AWS::NoValue'
+            # AbortIncompleteMultipartUpload: # NoValueなので不要と見て削除
+            #   DaysAfterInitiation: !Ref 'AWS::NoValue'  # 不完全なマルチパートアップロードをクリーンアップする: Disabled
+            ExpiredObjectDeleteMarker: false  # 期限切れのオブジェクト削除マーカーをクリーンアップする: Disabled
+      PublicAccessBlockConfiguration:  # パブリックアクセス設定
+        BlockPublicAcls: true  # 新規のパブリック ACL と、パブリックオブジェクトのアップロードをブロックする (推奨)
+        IgnorePublicAcls: true  # パブリック ACL を通じて付与されたパブリックアクセスを削除する (推奨)
+        BlockPublicPolicy: true  # 新規のパブリックバケットポリシーをブロックする (推奨)
+        RestrictPublicBuckets: true  # バケットにパブリックポリシーがある場合、パブリックアクセスとクロスアカウントアクセスをブロックする (推奨)
+
+  CloudTrailBucketPolicy:
+      Type: 'AWS::S3::BucketPolicy'
+      Properties:
+        Bucket: !Ref 'CloudTrailBucket'
+        PolicyDocument:
+          Fn::Sub: |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "AWSTrailLogsBucketPermissionsCheck",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "cloudtrail.amazonaws.com"
+                  },
+                  "Action": "s3:GetBucketAcl",
+                  "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}"
+                },
+                {
+                  "Sid": "AWSTrailLogsBucketDelivery",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "cloudtrail.amazonaws.com"
+                  },
+                  "Action": "s3:PutObject",
+                  "Resource": "arn:aws:s3:::aws-cloudtrail-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/*",
+                  "Condition": {
+                    "StringEquals": {
+                      "s3:x-amz-acl": "bucket-owner-full-control"
+                    }
+                  }
+                }
+              ]
+            }
+
+
+  ConfigRecorder:
+    Type: 'AWS::Config::ConfigurationRecorder'
+    Properties:
+      Name: 'default' # 設定レコーダーの名前をdefaultに設定
+      RoleARN: !GetAtt 'ConfigRole.Arn' # 設定レコーダーのロール: config-role-ap-northeast-1
+      RecordingGroup:
+        AllSupported: true  # 記録するリソース: すべてのリソース
+        IncludeGlobalResourceTypes: true
+    # データ保持期間はデフォルトが7年
+
+  ConfigDeliveryChannel:
+    Type: 'AWS::Config::DeliveryChannel'
+    Properties:
+      S3BucketName: !Sub 'aws-config-logs-${AWS::AccountId}'  # Amazon S3 バケット: aws-config-logs-${AWS::AccountId}
+      # SnsTopicARN: !Ref 'AWS::NoValue'  # Amazon SNS トピック: 設定なし
+      ConfigSnapshotDeliveryProperties:
+        DeliveryFrequency: 'One_Hour'
+
+  ConfigRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: 'config-role-ap-northeast-1'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow' # ポリシーの効果: 許可
+            Principal:  # ロールを引き受けることができるエンティティを指定: config.amazonaws.com
+              Service: 'config.amazonaws.com'  # Trust Relationships: config.amazonaws.com
+            Action: 'sts:AssumeRole' # ポリシーのアクション: sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'  # Managed Policies: AWS_ConfigRole
+
+  ConfigBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName:
+        Fn::Sub: 'aws-config-logs-${AWS::AccountId}'  # バケット名: aws-config-logs-${AWS::AccountId}
+# リージョンの設定は、スタックをデプロイする際に指定されるため、明示的に指定しない。
+      BucketEncryption:  # デフォルト暗号化: SSE-S3
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'  # SSE-S3
+      VersioningConfiguration:
+        Status: 'Suspended'  # バージョニング: Disabled
+      # LoggingConfiguration:  # サーバーアクセスのログ記録: Disabled
+      #   DestinationBucketName: !Ref 'AWS::NoValue'  # ログ記録が無効の場合、DestinationBucketNameを指定しない
+      ObjectLockEnabled: false  # オブジェクトのロック: Disabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: 'configLifeCycle'
+            Status: 'Enabled'
+            Prefix: ''  # Prefix or Tag: バケット全体
+            ExpirationInDays: 2557  # データ保持期間: デフォルト（7年）
+            # NoncurrentVersionExpirationInDays: !Ref 'AWS::NoValue'  # 失効の設定 (過去のバージョン): Disabled
+            # NoncurrentVersionTransition:  #ストレージクラスの移行が無効（Disabled）であるため、この3行は不要
+            #   - StorageClass: 'GLACIER' 
+            #     TransitionInDays: !Ref 'AWS::NoValue'
+            # AbortIncompleteMultipartUpload: # NoValueなので不要と見て削除
+            #   DaysAfterInitiation: !Ref 'AWS::NoValue'  # 不完全なマルチパートアップロードをクリーンアップする: Disabled
+            ExpiredObjectDeleteMarker: false  # 期限切れのオブジェクト削除マーカーをクリーンアップする: Disabled
+      PublicAccessBlockConfiguration:  # パブリックアクセス設定、システムのアクセス許可の管理
+        BlockPublicAcls: true  # 新規のパブリック ACL と、パブリックオブジェクトのアップロードをブロックする (推奨)
+        IgnorePublicAcls: true  # パブリック ACL を通じて付与されたパブリックアクセスを削除する (推奨)
+        BlockPublicPolicy: true  # 新規のパブリックバケットポリシーをブロックする (推奨)
+        RestrictPublicBuckets: true  # バケットにパブリックポリシーがある場合、パブリックアクセスとクロスアカウントアクセスをブロックする (推奨)
+      # MetricsConfigurations:  # CloudWatch リクエストメトリクス: Disabled
+      #   - Id: 'EntireBucketMetrics' # CloudWatchリクエストメトリクスを無効にするためには、設定自体を削除する。=デフォルトで無効
+      #     Status: 'Disabled'
+
+  ConfigBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref 'ConfigBucket'
+      PolicyDocument:
+        Fn::Sub: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AWSConfigBucketPermissionsCheck",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "config.amazonaws.com"
+                },
+                "Action": "s3:GetBucketAcl",
+                "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceAccount": "${AWS::AccountId}"
+                  }
+                }
+              },
+              {
+                "Sid": "AWSConfigBucketExistenceCheck",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "config.amazonaws.com"
+                },
+                "Action": "s3:ListBucket",
+                "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceAccount": "${AWS::AccountId}"
+                  }
+                }
+              },
+              {
+                "Sid": "AWSConfigBucketDelivery",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "config.amazonaws.com"
+                },
+                "Action": "s3:PutObject",
+                "Resource": "arn:aws:s3:::aws-config-logs-${AWS::AccountId}/AWSLogs/${AWS::AccountId}/Config/*",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceAccount": "${AWS::AccountId}",
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                  }
+                }
+              }
+            ]
+          }
+
+
