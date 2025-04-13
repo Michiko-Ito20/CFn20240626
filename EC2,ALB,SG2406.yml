@@ -3,7 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description:                                    #スタックの説明
   lecture10-CFn-EC2,ALB,SG
 
-
 # EC2セキュリティグループ
 Resources:                                        #どういったコンポーネントを作るか記載
   EC2SecurityGroup:                               #リソースの名前
