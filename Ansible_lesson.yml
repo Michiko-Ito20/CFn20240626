@@ -7,3 +7,18 @@
         state: present
         template_body: "{{ lookup('file', 'VPCtest2406.yml') }}" # VPCのCFnテンプレート
         region: "ap-northeast-1"  # 東京リージョン
+
+    - name: Create or update CloudFormation stack
+      amazon.aws.cloudformation:
+        stack_name: "Ansible-CFnEC2-ALB-SG2406"  # スタック名
+        state: present
+        template_body: "{{ lookup('file', 'EC2,ALB,SG2406.yml') }}" # EC2,ALB,SGのCFnテンプレート
+        region: "ap-northeast-1"  # 東京リージョン
+
+    - name: Create or update CloudFormation stack
+      amazon.aws.cloudformation:
+        stack_name: "Ansible-CFnRDS2406"  # スタック名
+        state: present
+        template_body: "{{ lookup('file', 'RDStest2406.yml') }}" # EC2,ALB,SGのCFnテンプレート
+        region: "ap-northeast-1"  # 東京リージョン
+
