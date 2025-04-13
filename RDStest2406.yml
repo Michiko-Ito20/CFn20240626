@@ -3,17 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description:                                    #スタックの説明
   lecture10-CFn-RDS
 
-Parameters:                                     #スタックを作成または更新するたびにテンプレートにカスタム値を入力できる
-  TestVPC:
-    Type: String
-
-  privatesubnet01:
-    Type: String
-
-  privatesubnet02:
-    Type: String
-
-
 #DBを作成
 Resources:                                      #どういったコンポーネントを作るかを記載
   DBInstance:                                   #(リソースの名前)DBインスタンス
