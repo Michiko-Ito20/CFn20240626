@@ -26,8 +26,32 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
 
+      - run:
+          name: Deploy CloudFormation Stack for EC2_ALB_SG
+          command: |
+            aws cloudformation deploy \
+              --template-file EC2,ALB,SG2406.yml\
+              --stack-name TrainingStackEC2_ALB_SG\
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+
+      - run:
+          name: Deploy CloudFormation Stack for RDS
+          command: |
+            aws cloudformation deploy \
+              --template-file RDStest2406.yml\
+              --stack-name TrainingStackRDS\
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+
 workflows:
   raisetech:
     jobs:
       - cfn-lint
-      - cfn-deploy
+      - cfn-deploy:
+          requires:
+            - cfn-lint
+      - cfn-delete:   #削除したくない場合はここ行をコメントアウト
+          requires:   #削除したくない場合はここ行をコメントアウト
+            - cfn-deploy  #削除したくない場合はここ行をコメントアウト
+
