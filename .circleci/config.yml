@@ -18,11 +18,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Deploy CloudFormation Stack
+          name: Deploy CloudFormation Stack for VPC
           command: |
             aws cloudformation deploy \
               --template-file CFn20240626/VPCtest2406.yml \
-              --stack-name TrainingStack \
+              --stack-name TrainingStackVPC\
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
 
