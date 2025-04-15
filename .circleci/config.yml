@@ -12,7 +12,22 @@ jobs:
           command: |
             cfn-lint -i W3002 -t CFn_training20241031/*.yml
 
+  cfn-deploy:
+    docker:
+      - image: amazon/aws-cli:2.13.7
+    steps:
+      - checkout
+      - run:
+          name: Deploy CloudFormation Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file CFn20240626/VPCtest2406.yml \
+              --stack-name TrainingStack \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+
 workflows:
   raisetech:
     jobs:
       - cfn-lint
+      - cfn-deploy
