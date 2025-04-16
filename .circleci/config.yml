@@ -26,11 +26,11 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
-          name: Deploy CloudFormation Stack for EC2_ALB_SG
+          name: Deploy CloudFormation Stack for EC2-ALB-SG
           command: |
             aws cloudformation deploy \
               --template-file EC2,ALB,SG2406.yml\
-              --stack-name TrainingStackEC2_ALB_SG\
+              --stack-name TrainingStackEC2-ALB-SG\
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
@@ -53,10 +53,10 @@ jobs:
               --stack-name TrainingStackVPC \
               --region ap-northeast-1
       - run:
-          name: Delete CloudFormation Stack for EC2_ALB_SG
+          name: Delete CloudFormation Stack for EC2-ALB-SG
           command: |
             aws cloudformation delete-stack \
-              --stack-name TrainingStackEC2_ALB_SG \
+              --stack-name TrainingStackEC2-ALB-SG \
               --region ap-northeast-1
       - run:
           name: Delete CloudFormation Stack for RDS
