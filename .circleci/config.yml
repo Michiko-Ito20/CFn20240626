@@ -25,7 +25,6 @@ jobs:
               --stack-name TrainingStackVPC\
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-
       - run:
           name: Deploy CloudFormation Stack for EC2_ALB_SG
           command: |
@@ -34,7 +33,6 @@ jobs:
               --stack-name TrainingStackEC2_ALB_SG\
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-
       - run:
           name: Deploy CloudFormation Stack for RDS
           command: |
@@ -44,6 +42,29 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
 
+  delete-stack:
+    docker:
+      - image: amazon/aws-cli:2.13.7
+    steps:
+      - run:
+          name: Delete CloudFormation Stack for VPC
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackVPC \
+              --region ap-northeast-1
+      - run:
+          name: Delete CloudFormation Stack for EC2_ALB_SG
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackEC2_ALB_SG \
+              --region ap-northeast-1
+      - run:
+          name: Delete CloudFormation Stack for RDS
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackRDS \
+              --region ap-northeast-1
+
 workflows:
   raisetech:
     jobs:
@@ -51,7 +72,7 @@ workflows:
       - cfn-deploy:
           requires:
             - cfn-lint
-      - cfn-delete:   #削除したくない場合はここ行をコメントアウト
+      - delete-stack:   #削除したくない場合はここ行をコメントアウト
           requires:   #すべてのジョブが完了した後に実行。削除したくない場合コメントアウト
             - cfn-lint  #削除したくない場合はここ行をコメントアウト
             - cfn-deploy  #削除したくない場合はここ行をコメントアウト
