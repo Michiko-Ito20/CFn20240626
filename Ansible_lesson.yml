@@ -22,3 +22,10 @@
         template_body: "{{ lookup('file', 'RDStest2406.yml') }}" # RDSのCFnテンプレート
         region: "ap-northeast-1"
 
+    - name: Configure Git and Nginx
+      hosts: localhost
+      become: true
+      roles:
+        - myrole
+
+
