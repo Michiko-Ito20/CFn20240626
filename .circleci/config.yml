@@ -66,14 +66,20 @@ jobs:
               --region ap-northeast-1
 
 workflows:
-  raisetech:
-    jobs:
+  default:
+    jobs: 
+      - build:
+          filters:    #ブランチでもCircleCIを起動させたい時はここから削除
+            branches:
+              only: main
+            tags:
+              only: v1.0    #ブランチでもCircleCIを起動させたい時はここまで削除
       - cfn-lint
       - cfn-deploy:
           requires:
             - cfn-lint
-      - delete-stack:   #削除したくない場合はここ行をコメントアウト
-          requires:   #すべてのジョブが完了した後に実行。削除したくない場合コメントアウト
-            - cfn-lint  #削除したくない場合はここ行をコメントアウト
-            - cfn-deploy  #削除したくない場合はここ行をコメントアウト
+      - delete-stack:
+          requires:
+            - cfn-lint
+            - cfn-deploy
 
