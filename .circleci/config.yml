@@ -12,7 +12,74 @@ jobs:
           command: |
             cfn-lint -i W3002 -t CFn_training20241031/*.yml
 
+  cfn-deploy:
+    docker:
+      - image: amazon/aws-cli:2.13.7
+    steps:
+      - checkout
+      - run:
+          name: Deploy CloudFormation Stack for VPC
+          command: |
+            aws cloudformation deploy \
+              --template-file VPCtest2406.yml \
+              --stack-name TrainingStackVPC\
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Deploy CloudFormation Stack for EC2-ALB-SG
+          command: |
+            aws cloudformation deploy \
+              --template-file EC2,ALB,SG2406.yml\
+              --stack-name TrainingStackEC2-ALB-SG\
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Deploy CloudFormation Stack for RDS
+          command: |
+            aws cloudformation deploy \
+              --template-file RDStest2406.yml\
+              --stack-name TrainingStackRDS\
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+
+  delete-stack:
+    docker:
+      - image: amazon/aws-cli:2.13.7
+    steps:
+      - run:
+          name: Delete CloudFormation Stack for VPC
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackVPC \
+              --region ap-northeast-1
+      - run:
+          name: Delete CloudFormation Stack for EC2-ALB-SG
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackEC2-ALB-SG \
+              --region ap-northeast-1
+      - run:
+          name: Delete CloudFormation Stack for RDS
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackRDS \
+              --region ap-northeast-1
+
 workflows:
-  raisetech:
-    jobs:
+  default:
+    jobs: 
+      - build:
+          filters:    #ブランチでもCircleCIを起動させたい時はここから削除
+            branches:
+              only: main
+            tags:
+              only: v1.0    #ブランチでもCircleCIを起動させたい時はここまで削除
       - cfn-lint
+      - cfn-deploy:
+          requires:
+            - cfn-lint
+      - delete-stack:
+          requires:
+            - cfn-lint
+            - cfn-deploy
+
