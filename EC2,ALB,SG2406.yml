@@ -3,17 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description:                                    #スタックの説明
   lecture10-CFn-EC2,ALB,SG
 
-Parameters:                                     #スタックを作成または更新するたびにテンプレートにカスタム値を入力できる
-  TestVPC:
-    Type: String
-
-  publicsubnet01:
-    Type: String
-
-  publicsubnet02:
-    Type: String
-
-
 # EC2セキュリティグループ
 Resources:                                        #どういったコンポーネントを作るか記載
   EC2SecurityGroup:                               #リソースの名前
