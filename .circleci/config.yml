@@ -3,7 +3,7 @@ orbs:
   python: circleci/python@2.0.3
 
 jobs:
-  ansible-playbook:
+  setup-environment:
     docker:
       - image: circleci/python:3.9  # Python 3.9を使用
     steps:
@@ -14,6 +14,12 @@ jobs:
             sudo apt update
             sudo apt install -y ansible
             pip install boto3 botocore amazon.aws
+
+  ansible-playbook:
+    docker:
+      - image: circleci/python:3.9  # Python 3.9を使用
+    steps:
+      - checkout  # リポジトリをチェックアウト
       - run:
           name: Run Ansible Playbook to Create CFn
           command: |
@@ -25,12 +31,6 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          name: Install dependencies
-          command: |
-            sudo apt update
-            sudo apt install -y ansible
-            pip install boto3 botocore amazon.aws
-      - run:
           name: Run Ansible Playbook to Delete CFn
           command: |
             ansible-playbook -i localhost, -c local delete_cfn.yml
@@ -38,10 +38,13 @@ jobs:
 workflows:
   default:
     jobs:
-      - ansible-playbook:
+      - setup-environment:
           filters:
             branches:
               only: master  # masterブランチにプッシュされたときのみ実行
+      - ansible-playbook:
+          requires:
+            - setup-environment
       - delete-cfn-stack:
           requires:
-            - ansible-playbook  # ansible-playbookジョブが完了した後に実行
+            - ansible-playbook
