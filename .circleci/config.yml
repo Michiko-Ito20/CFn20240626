@@ -1,85 +1,47 @@
 version: 2.1
 orbs:
   python: circleci/python@2.0.3
+
 jobs:
-  cfn-lint:
-    executor: python/default
-    steps:
-      - checkout
-      - run: pip install cfn-lint
-      - run:
-          name: run cfn-lint
-          command: |
-            cfn-lint -i W3002 -t CFn_training20241031/*.yml
-
-  cfn-deploy:
+  ansible-playbook:
     docker:
-      - image: amazon/aws-cli:2.13.7
+      - image: circleci/python:3.9  # Python 3.9を使用
     steps:
-      - checkout
+      - checkout  # リポジトリをチェックアウト
       - run:
-          name: Deploy CloudFormation Stack for VPC
+          name: Install dependencies
           command: |
-            aws cloudformation deploy \
-              --template-file VPCtest2406.yml \
-              --stack-name TrainingStackVPC\
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
+            sudo apt update
+            sudo apt install -y ansible
+            pip install boto3 botocore amazon.aws
       - run:
-          name: Deploy CloudFormation Stack for EC2-ALB-SG
+          name: Run Ansible Playbook to Create CFn
           command: |
-            aws cloudformation deploy \
-              --template-file EC2,ALB,SG2406.yml\
-              --stack-name TrainingStackEC2-ALB-SG\
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Deploy CloudFormation Stack for RDS
-          command: |
-            aws cloudformation deploy \
-              --template-file RDStest2406.yml\
-              --stack-name TrainingStackRDS\
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
+            ansible-playbook -i localhost, -c local Ansible_lesson.yml
 
-  delete-stack:
+  delete-cfn-stack:
     docker:
-      - image: amazon/aws-cli:2.13.7
+      - image: circleci/python:3.9  # Python 3.9を使用
     steps:
+      - checkout  # リポジトリをチェックアウト
       - run:
-          name: Delete CloudFormation Stack for VPC
+          name: Install dependencies
           command: |
-            aws cloudformation delete-stack \
-              --stack-name TrainingStackVPC \
-              --region ap-northeast-1
+            sudo apt update
+            sudo apt install -y ansible
+            pip install boto3 botocore amazon.aws
       - run:
-          name: Delete CloudFormation Stack for EC2-ALB-SG
+          name: Run Ansible Playbook to Delete CFn
           command: |
-            aws cloudformation delete-stack \
-              --stack-name TrainingStackEC2-ALB-SG \
-              --region ap-northeast-1
-      - run:
-          name: Delete CloudFormation Stack for RDS
-          command: |
-            aws cloudformation delete-stack \
-              --stack-name TrainingStackRDS \
-              --region ap-northeast-1
+            ansible-playbook -i localhost, -c local delete_cfn.yml
 
 workflows:
   default:
-    jobs: 
-      - build:
-          filters:    #ブランチでもCircleCIを起動させたい時はここから削除
+    jobs:
+      - ansible-playbook:
+          filters:
             branches:
-              only: main
-            tags:
-              only: v1.0    #ブランチでもCircleCIを起動させたい時はここまで削除
-      - cfn-lint
-      - cfn-deploy:
+              only: master  # masterブランチにプッシュされたときのみ実行
+      - delete-cfn-stack:
           requires:
-            - cfn-lint
-      - delete-stack:
-          requires:
-            - cfn-lint
-            - cfn-deploy
-
+            - ansible-playbook  # ansible-playbookジョブが完了した後に実行
