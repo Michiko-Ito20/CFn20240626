@@ -39,7 +39,7 @@ workflows:
       - setup-environment:
           filters:
             branches:
-              only: master  # masterブランチにプッシュされたときのみ実行
+              only: main  # mainブランチにプッシュされたときのみ実行
       - ansible-playbook:
           requires:
             - setup-environment
