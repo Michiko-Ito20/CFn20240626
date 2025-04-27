@@ -1,2 +1,21 @@
 ---
 # tasks file for myrole
+
+# Gitをインストール
+- name: Install Git
+  ansible.builtin.yum:
+    name: git
+    state: present
+
+# Nginxをインストール
+- name: Install Nginx
+  ansible.builtin.yum:
+    name: nginx
+    state: present
+
+# Nginxを起動して有効化
+- name: Start and enable Nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
