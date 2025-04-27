@@ -1,11 +1,11 @@
 version: 2.1
+
 orbs:
-  python: circleci/python@2.0.3
+  python: circleci/python@2.0.3  # CircleCIのPython Orbを使用
 
 jobs:
   setup-environment:
-    docker:
-      - image: circleci/python:3.9  # Python 3.9を使用
+    executor: python/default  # Python OrbのデフォルトExecutorを使用
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
@@ -16,8 +16,7 @@ jobs:
             pip install boto3 botocore amazon.aws
 
   ansible-playbook:
-    docker:
-      - image: circleci/python:3.9  # Python 3.9を使用
+    executor: python/default  # Python OrbのデフォルトExecutorを使用
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
@@ -26,8 +25,7 @@ jobs:
             ansible-playbook -i localhost, -c local Ansible_lesson.yml
 
   delete-cfn-stack:
-    docker:
-      - image: circleci/python:3.9  # Python 3.9を使用
+    executor: python/default  # Python OrbのデフォルトExecutorを使用
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
