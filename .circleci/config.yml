@@ -1,27 +1,27 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@2.0.3  # CircleCIのPython Orbを使用
+  python: circleci/python@3.1.0  # 最新バージョンのPython Orbを使用
 
 jobs:
   setup-environment:
     executor:
-      name: python/default  # Python OrbのデフォルトExecutorを使用
+      name: python/default
       tag: "3.8"  # Python 3.8を指定
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
           name: Install dependencies
           command: |
-            sudo yum update
-            sudo yum install -y ansible
+            sudo apt update
+            sudo apt install -y ansible
             pip install --upgrade boto3 botocore
             ansible-galaxy collection install amazon.aws --force
 
   ansible-playbook:
     executor:
       name: python/default
-      tag: "3.8"  # Python 3.8を指定
+      tag: "3.8"
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
@@ -32,7 +32,7 @@ jobs:
   delete-cfn-stack:
     executor:
       name: python/default
-      tag: "3.8"  # Python 3.8を指定
+      tag: "3.8"
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
@@ -43,10 +43,7 @@ jobs:
 workflows:
   default:
     jobs:
-      - setup-environment:
-          filters:
-            branches:
-              only: main  # mainブランチにプッシュされたときのみ実行
+      - setup-environment
       - ansible-playbook:
           requires:
             - setup-environment
