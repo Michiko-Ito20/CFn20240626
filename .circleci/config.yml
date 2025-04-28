@@ -5,7 +5,9 @@ orbs:
 
 jobs:
   setup-environment:
-    executor: python/default  # Python OrbのデフォルトExecutorを使用
+    executor: 
+	name: python/default  # Python OrbのデフォルトExecutorを使用
+	tag: "3.8"	# Python 3.8を指定
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
@@ -20,7 +22,7 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          name: Run Ansible Playbook to Create CFn
+          nam# Python 3.8を指定: Run Ansible Playbook to Create CFn
           command: |
             ansible-playbook -i localhost, -c local Ansible_lesson.yml
 
