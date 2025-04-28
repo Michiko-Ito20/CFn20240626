@@ -5,29 +5,34 @@ orbs:
 
 jobs:
   setup-environment:
-    executor: 
-	name: python/default  # Python OrbのデフォルトExecutorを使用
-	tag: "3.8"	# Python 3.8を指定
+    executor:
+      name: python/default  # Python OrbのデフォルトExecutorを使用
+      tag: "3.8"  # Python 3.8を指定
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
           name: Install dependencies
           command: |
-            sudo apt update
-            sudo apt install -y ansible
-            pip install boto3 botocore amazon.aws
+            sudo yum update
+            sudo yum install -y ansible
+            pip install --upgrade boto3 botocore
+            ansible-galaxy collection install amazon.aws --force
 
   ansible-playbook:
-    executor: python/default  # Python OrbのデフォルトExecutorを使用
+    executor:
+      name: python/default
+      tag: "3.8"  # Python 3.8を指定
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          nam# Python 3.8を指定: Run Ansible Playbook to Create CFn
+          name: Run Ansible Playbook to Create CFn
           command: |
             ansible-playbook -i localhost, -c local Ansible_lesson.yml
 
   delete-cfn-stack:
-    executor: python/default  # Python OrbのデフォルトExecutorを使用
+    executor:
+      name: python/default
+      tag: "3.8"  # Python 3.8を指定
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
