@@ -81,11 +81,19 @@ jobs:
 workflows:
   default:
     jobs:
-      - setup-environment
+      - setup-environment:
+          filters:
+            branches:
+              only: main  # mainブランチのみ実行
       - ansible-playbook:
           requires:
             - setup-environment
+          filters:
+            branches:
+              only: main  # mainブランチのみ実行
       - delete-cfn-stack:
           requires:
             - ansible-playbook
-
+          filters:
+            branches:
+              only: main  # mainブランチのみ実行
