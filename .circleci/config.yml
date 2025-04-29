@@ -41,30 +41,6 @@ jobs:
               --stack-name TrainingStackRDS \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Deploy CloudFormation Stack for VPC
-          command: |
-            aws cloudformation deploy \
-              --template-file VPCtest2406.yml \
-              --stack-name TrainingStackVPC \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Deploy CloudFormation Stack for EC2-ALB-SG
-          command: |
-            aws cloudformation deploy \
-              --template-file EC2,ALB,SG2406.yml \
-              --stack-name TrainingStackEC2-ALB-SG \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Deploy CloudFormation Stack for RDS
-          command: |
-            aws cloudformation deploy \
-              --template-file RDStest2406.yml \
-              --stack-name TrainingStackRDS \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
 
   ansible-playbook:
     executor:
