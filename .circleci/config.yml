@@ -71,11 +71,7 @@ jobs:
       name: python/default
       tag: "3.8"
     steps:
-      - checkout
-      - run:
-          name: Verify Ansible Installation
-          command: |
-            ansible --version
+      - checkout  # リポジトリをチェックアウト
       - run:
           name: Run Ansible Playbook
           command: |
