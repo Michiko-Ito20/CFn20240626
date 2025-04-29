@@ -14,7 +14,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt update
-            sudo apt install -y ansible awscli python3-pip
+            sudo apt install -y ansible awscli
             pip install --upgrade boto3 botocore
             ansible-galaxy collection install amazon.aws --force
       - run:
