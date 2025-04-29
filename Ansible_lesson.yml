@@ -1,31 +1,13 @@
-- name: Manage CloudFormation stack
-  hosts: localhost
-  tasks:
-    - name: Create or update CloudFormation stack for VPC
-      amazon.aws.cloudformation:
-        stack_name: "Ansible-CFnVPCtest2406"
-        state: present
-        template_body: "{{ lookup('file', 'VPCtest2406.yml') }}"
-        region: "ap-northeast-1"
-
-    - name: Create or update CloudFormation stack for EC2, ALB, SG
-      amazon.aws.cloudformation:
-        stack_name: "Ansible-CFnEC2-ALB-SG2406"
-        state: present
-        template_body: "{{ lookup('file', 'EC2,ALB,SG2406.yml') }}"
-        region: "ap-northeast-1"
-
-    - name: Create or update CloudFormation stack for RDS
-      amazon.aws.cloudformation:
-        stack_name: "Ansible-CFnRDStest2406"
-        state: present
-        template_body: "{{ lookup('file', 'RDStest2406.yml') }}"
-        region: "ap-northeast-1"
-
 - name: Configure Git and Nginx
   hosts: localhost
-  become: true
-  roles:
-    - myrole
+  tasks:
+    - name: Install Git
+      apt:
+        name: git
+        state: present
 
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
 
