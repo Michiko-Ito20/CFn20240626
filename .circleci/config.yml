@@ -14,9 +14,33 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt update
-            sudo apt install -y ansible
+            sudo apt install -y ansible awscli
             pip install --upgrade boto3 botocore
             ansible-galaxy collection install amazon.aws --force
+      - run:
+          name: Deploy CloudFormation Stack for VPC
+          command: |
+            aws cloudformation deploy \
+              --template-file VPCtest2406.yml \
+              --stack-name TrainingStackVPC \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Deploy CloudFormation Stack for EC2-ALB-SG
+          command: |
+            aws cloudformation deploy \
+              --template-file EC2,ALB,SG2406.yml \
+              --stack-name TrainingStackEC2-ALB-SG \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Deploy CloudFormation Stack for RDS
+          command: |
+            aws cloudformation deploy \
+              --template-file RDStest2406.yml \
+              --stack-name TrainingStackRDS \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
 
   ansible-playbook:
     executor:
@@ -25,7 +49,7 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          name: Run Ansible Playbook to Create CFn
+          name: Run Ansible Playbook
           command: |
             ansible-playbook -i localhost, -c local Ansible_lesson.yml
 
@@ -36,9 +60,23 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          name: Run Ansible Playbook to Delete CFn
+          name: Delete CloudFormation Stack for RDS
           command: |
-            ansible-playbook -i localhost, -c local delete_cfn.yml
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackRDS \
+              --region ap-northeast-1
+      - run:
+          name: Delete CloudFormation Stack for EC2-ALB-SG
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackEC2-ALB-SG \
+              --region ap-northeast-1
+      - run:
+          name: Delete CloudFormation Stack for VPC
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name TrainingStackVPC \
+              --region ap-northeast-1
 
 workflows:
   default:
