@@ -49,6 +49,11 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
+          name: Install Ansible (if not installed)
+          command: |
+            sudo apt update
+            sudo apt install -y ansible
+      - run:
           name: Run Ansible Playbook
           command: |
             ansible-playbook -i localhost, -c local Ansible_lesson.yml
@@ -81,11 +86,19 @@ jobs:
 workflows:
   default:
     jobs:
-      - setup-environment
+      - setup-environment:
+          filters:
+            branches:
+              only: main  # mainブランチのみ実行
       - ansible-playbook:
           requires:
             - setup-environment
+          filters:
+            branches:
+              only: main  # mainブランチのみ実行
       - delete-cfn-stack:
           requires:
             - ansible-playbook
-
+          filters:
+            branches:
+              only: main  # mainブランチのみ実行
