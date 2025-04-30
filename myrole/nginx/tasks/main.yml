@@ -1,11 +1,5 @@
 ---
-# tasks file for myrole
-
-# Gitをインストール
-- name: Install Git
-  ansible.builtin.yum:
-    name: git
-    state: present
+# myrole/nginx/tasks/main.yml
 
 # Nginxをインストール
 - name: Install Nginx
