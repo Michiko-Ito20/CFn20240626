@@ -18,61 +18,30 @@ jobs:
             pip3 install --upgrade pip
             pip3 install ansible[aws] boto3 botocore
             ansible-galaxy collection install amazon.aws --force
-      - save_cache:  # キャッシュを保存
-          key: v1-ansible-dependencies-{{ checksum "requirements.txt" }}
+      - run:
+          name: Save dependencies to workspace
+          command: |
+            mkdir -p ~/workspace
+            cp -r ~/.local ~/workspace/
+      - persist_to_workspace:
+          root: ~/workspace
           paths:
-            - ~/.local/bin
-            - ~/.local/lib
-      - run:
-          name: Install Ansible
-          command: |
-            pip3 install ansible
-      - run:
-          name: Add Ansible to PATH
-          command: |
-            echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
-            source ~/.bashrc
-            echo $PATH
-      - run:
-          name: Verify Ansible Installation
-          command: |
-            which ansible
-            ansible --version
-            which ansible-playbook
-            ansible-playbook --version
-      - run:
-          name: Deploy CloudFormation Stack for VPC
-          command: |
-            aws cloudformation deploy \
-              --template-file VPCtest2406.yml \
-              --stack-name TrainingStackVPC \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Deploy CloudFormation Stack for EC2-ALB-SG
-          command: |
-            aws cloudformation deploy \
-              --template-file EC2,ALB,SG2406.yml \
-              --stack-name TrainingStackEC2-ALB-SG \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Deploy CloudFormation Stack for RDS
-          command: |
-            aws cloudformation deploy \
-              --template-file RDStest2406.yml \
-              --stack-name TrainingStackRDS \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
+            - .local
 
   ansible-playbook:
     executor:
       name: python/default
       tag: "3.8"
     steps:
-      - checkout  # リポジトリをチェックアウト
-      - restore_cache:  # キャッシュを復元
-          key: v1-ansible-dependencies-{{ checksum "requirements.txt" }}
+      - attach_workspace:
+          at: ~/workspace
+      - run:
+          name: Restore dependencies
+          command: |
+            cp -r ~/workspace/.local ~/
+            echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
+            source ~/.bashrc
+      - checkout
       - run:
           name: Verify Ansible Installation
           command: |
