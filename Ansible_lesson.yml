@@ -2,6 +2,11 @@
 - name: Configure Git and Nginx using roles
   hosts: localhost
   become: yes
+  tasks:
+    - name: Display Ansible version
+      debug:
+        msg: "Ansible version is {{ ansible_version.full }}"
+
   roles:
     - git
     - nginx
