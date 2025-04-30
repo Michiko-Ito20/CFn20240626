@@ -44,24 +44,24 @@ jobs:
           name: Create CloudFormation Stack for VPC
           command: |
             aws cloudformation deploy \
-              --template-file templates/vpc.yml \
-              --stack-name TrainingStackVPC \
+              --template-file VPCtest2406.yml \
+              --stack-name AnsibleStackVPC \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
           name: Create CloudFormation Stack for EC2-ALB-SG
           command: |
             aws cloudformation deploy \
-              --template-file templates/ec2-alb-sg.yml \
-              --stack-name TrainingStackEC2-ALB-SG \
+              --template-file EC2,ALB,SG2406.yml \
+              --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
           name: Create CloudFormation Stack for RDS
           command: |
             aws cloudformation deploy \
-              --template-file templates/rds.yml \
-              --stack-name TrainingStackRDS \
+              --template-file RDStest2406.yml \
+              --stack-name AnsibleStackRDS \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
 
@@ -101,19 +101,19 @@ jobs:
           name: Delete CloudFormation Stack for RDS
           command: |
             aws cloudformation delete-stack \
-              --stack-name TrainingStackRDS \
+              --stack-name AnsibleStackRDS \
               --region ap-northeast-1
       - run:
           name: Delete CloudFormation Stack for EC2-ALB-SG
           command: |
             aws cloudformation delete-stack \
-              --stack-name TrainingStackEC2-ALB-SG \
+              --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1
       - run:
           name: Delete CloudFormation Stack for VPC
           command: |
             aws cloudformation delete-stack \
-              --stack-name TrainingStackVPC \
+              --stack-name AnsibleStackVPC \
               --region ap-northeast-1
 
 workflows:
@@ -126,12 +126,7 @@ workflows:
       - ansible-playbook:
           requires:
             - setup-environment
-          filters:
-            branches:
-              ignore: []  # すべてのブランチで実行
       - delete-cfn-stack:
           requires:
             - ansible-playbook
-          filters:
-            branches:
-              only: main  # 本番デプロイはmainブランチのみ
+
