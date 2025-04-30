@@ -14,9 +14,15 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt update
-            sudo apt install -y ansible awscli
-            pip install --upgrade boto3 botocore
+            sudo apt install -y python3 python3-pip awscli
+            pip3 install --upgrade pip
+            pip3 install ansible boto3 botocore
             ansible-galaxy collection install amazon.aws --force
+      - run:
+          name: Verify Ansible Installation
+          command: |
+            which ansible
+            ansible --version
       - run:
           name: Deploy CloudFormation Stack for VPC
           command: |
