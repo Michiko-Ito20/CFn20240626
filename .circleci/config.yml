@@ -19,6 +19,12 @@ jobs:
             pip3 install ansible boto3 botocore
             ansible-galaxy collection install amazon.aws --force
       - run:
+          name: Add Ansible to PATH
+          command: |
+            echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
+            source ~/.bashrc
+            echo $PATH
+      - run:
           name: Verify Ansible Installation
           command: |
             which ansible
@@ -55,9 +61,13 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
+          name: Run Ansible Playbook (Dry Run)
+          command: |
+            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml --check
+      - run:
           name: Run Ansible Playbook
           command: |
-            ansible-playbook -i localhost, -c local Ansible_lesson.yml
+            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml
 
   delete-cfn-stack:
     executor:
@@ -90,16 +100,16 @@ workflows:
       - setup-environment:
           filters:
             branches:
-              only: main  # mainブランチのみ実行
+              ignore: []  # すべてのブランチで実行
       - ansible-playbook:
           requires:
             - setup-environment
           filters:
             branches:
-              only: main  # mainブランチのみ実行
+              ignore: []  # すべてのブランチで実行
       - delete-cfn-stack:
           requires:
             - ansible-playbook
           filters:
             branches:
-              only: main  # mainブランチのみ実行
+              only: main  # 本番デプロイはmainブランチのみ
