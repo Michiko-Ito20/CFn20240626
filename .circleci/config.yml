@@ -18,6 +18,11 @@ jobs:
             pip3 install --upgrade pip
             pip3 install ansible[aws] boto3 botocore
             ansible-galaxy collection install amazon.aws --force
+      - save_cache:  # キャッシュを保存
+          key: v1-ansible-dependencies-{{ checksum "requirements.txt" }}
+          paths:
+            - ~/.local/bin
+            - ~/.local/lib
       - run:
           name: Install Ansible
           command: |
@@ -66,6 +71,8 @@ jobs:
       tag: "3.8"
     steps:
       - checkout  # リポジトリをチェックアウト
+      - restore_cache:  # キャッシュを復元
+          key: v1-ansible-dependencies-{{ checksum "requirements.txt" }}
       - run:
           name: Verify Ansible Installation
           command: |
