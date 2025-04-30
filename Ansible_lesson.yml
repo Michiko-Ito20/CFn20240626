@@ -1,13 +1,9 @@
-- name: Configure Git and Nginx
+---
+- name: Configure Git and Nginx using roles
   hosts: localhost
-  tasks:
-    - name: Install Git
-      apt:
-        name: git
-        state: present
+  become: yes
 
-    - name: Install Nginx
-      apt:
-        name: nginx
-        state: present
+  roles:
+    - git
+    - nginx
 

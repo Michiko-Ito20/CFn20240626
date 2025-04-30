@@ -16,13 +16,25 @@ jobs:
             sudo apt update
             sudo apt install -y python3 python3-pip awscli
             pip3 install --upgrade pip
-            pip3 install ansible boto3 botocore
+            pip3 install ansible[aws] boto3 botocore
             ansible-galaxy collection install amazon.aws --force
+      - run:
+          name: Install Ansible
+          command: |
+            pip3 install ansible
+      - run:
+          name: Add Ansible to PATH
+          command: |
+            echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
+            source ~/.bashrc
+            echo $PATH
       - run:
           name: Verify Ansible Installation
           command: |
             which ansible
             ansible --version
+            which ansible-playbook
+            ansible-playbook --version
       - run:
           name: Deploy CloudFormation Stack for VPC
           command: |
@@ -55,9 +67,16 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
+          name: Verify Ansible Installation
+          command: |
+            which ansible
+            ansible --version
+            which ansible-playbook
+            ansible-playbook --version
+      - run:
           name: Run Ansible Playbook
           command: |
-            ansible-playbook -i localhost, -c local Ansible_lesson.yml
+            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml
 
   delete-cfn-stack:
     executor:
@@ -90,16 +109,16 @@ workflows:
       - setup-environment:
           filters:
             branches:
-              only: main  # mainブランチのみ実行
+              ignore: []  # すべてのブランチで実行
       - ansible-playbook:
           requires:
             - setup-environment
           filters:
             branches:
-              only: main  # mainブランチのみ実行
+              ignore: []  # すべてのブランチで実行
       - delete-cfn-stack:
           requires:
             - ansible-playbook
           filters:
             branches:
-              only: main  # mainブランチのみ実行
+              only: main  # 本番デプロイはmainブランチのみ
