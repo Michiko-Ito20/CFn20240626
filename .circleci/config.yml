@@ -19,6 +19,18 @@ jobs:
             pip3 install ansible[aws] boto3 botocore
             ansible-galaxy collection install amazon.aws --force
       - run:
+          name: Verify Ansible and AnsiblePlaybook Installation
+          command: |
+            which ansible
+            ansible --version
+            which ansible-playbook
+            ansible-playbook --version
+      - run:
+          name: Check Installed Files
+          command: |
+            ls -la ~/.local
+            ls -la ~/.local/bin
+      - run:
           name: Save dependencies to workspace
           command: |
             mkdir -p ~/workspace
@@ -27,6 +39,31 @@ jobs:
           root: ~/workspace
           paths:
             - .local
+
+      - run:
+          name: Create CloudFormation Stack for VPC
+          command: |
+            aws cloudformation deploy \
+              --template-file templates/vpc.yml \
+              --stack-name TrainingStackVPC \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Create CloudFormation Stack for EC2-ALB-SG
+          command: |
+            aws cloudformation deploy \
+              --template-file templates/ec2-alb-sg.yml \
+              --stack-name TrainingStackEC2-ALB-SG \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Create CloudFormation Stack for RDS
+          command: |
+            aws cloudformation deploy \
+              --template-file templates/rds.yml \
+              --stack-name TrainingStackRDS \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
 
   ansible-playbook:
     executor:
