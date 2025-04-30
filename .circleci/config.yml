@@ -67,9 +67,12 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          name: Run Ansible Playbook (Dry Run)
+          name: Verify Ansible Installation
           command: |
-            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml --check
+            which ansible
+            ansible --version
+            which ansible-playbook
+            ansible-playbook --version
       - run:
           name: Run Ansible Playbook
           command: |
