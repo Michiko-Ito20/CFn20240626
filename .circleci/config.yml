@@ -76,9 +76,13 @@ jobs:
             which ansible-playbook
             ansible-playbook --version
       - run:
+          name: Set Ansible Roles Path
+          command: |
+            export ANSIBLE_ROLES_PATH=./myrole
+      - run:
           name: Run Ansible Playbook
           command: |
-            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml --roles-path ./roles
+            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml
 
   delete-cfn-stack:
     executor:
