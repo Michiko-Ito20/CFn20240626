@@ -3,13 +3,10 @@ version: 2.1
 orbs:
   python: circleci/python@3.1.0  # 最新バージョンのPython Orbを使用
 
-jobs:
-  setup-environment:
-    executor:
-      name: python/default
-      tag: "3.8"  # Python 3.8を指定
+commands:
+  install-dependencies:
+    description: "Install required dependencies"
     steps:
-      - checkout  # リポジトリをチェックアウト
       - run:
           name: Install dependencies
           command: |
@@ -18,6 +15,15 @@ jobs:
             pip3 install --upgrade pip
             pip3 install ansible[aws] boto3 botocore
             ansible-galaxy collection install amazon.aws --force
+
+jobs:
+  setup-environment:
+    executor:
+      name: python/default
+      tag: "3.8"  # Python 3.8を指定
+    steps:
+      - checkout  # リポジトリをチェックアウト
+      - install-dependencies  # ここでcommandsを呼び出し
       - run:
           name: Verify Ansible and AnsiblePlaybook Installation
           command: |
@@ -30,16 +36,6 @@ jobs:
           command: |
             ls -la ~/.local
             ls -la ~/.local/bin
-      - run:
-          name: Save dependencies to workspace
-          command: |
-            mkdir -p ~/workspace
-            cp -r ~/.local ~/workspace/
-      - persist_to_workspace:
-          root: ~/workspace
-          paths:
-            - .local
-
       - run:
           name: Create CloudFormation Stack for VPC
           command: |
@@ -70,15 +66,8 @@ jobs:
       name: python/default
       tag: "3.8"
     steps:
-      - attach_workspace:
-          at: ~/workspace
-      - run:
-          name: Restore dependencies
-          command: |
-            cp -r ~/workspace/.local ~/
-            echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
-            source ~/.bashrc
       - checkout
+      - install-dependencies  # 再度依存関係をインストール
       - run:
           name: Verify Ansible Installation
           command: |
