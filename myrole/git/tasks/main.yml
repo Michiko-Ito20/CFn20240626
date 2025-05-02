@@ -2,6 +2,6 @@
 # myrole/git/tasks/main.yml
 # Gitをインストール
 - name: Install Git
-  ansible.builtin.yum:
+  ansible.builtin.apt:
     name: git
     state: present
