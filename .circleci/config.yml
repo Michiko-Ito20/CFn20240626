@@ -63,7 +63,7 @@ jobs:
       - run:
           name: Get EC2 Public IP and Update Inventory
           command: |
-            INSTANCE_NAME="MyInstanceName"
+            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance"
             EC2_PUBLIC_IP=$(aws ec2 describe-instances \
               --region ap-northeast-1 \
               --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
