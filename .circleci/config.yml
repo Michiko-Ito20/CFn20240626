@@ -79,6 +79,13 @@ jobs:
           name: Test Ansible Connection
           command: |
             ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log
+      - add_ssh_keys:
+          fingerprints:
+            - "6f:74:61:24:ee:da:cb:01:f1:e6:11:f8:b8:95:ae:38:db:32:e3:71"
+      - run:
+          name: Test SSH Connection
+          command: |
+            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} "echo 'Connected via SSH'"
 
 
   ansible-playbook:
