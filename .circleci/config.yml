@@ -66,11 +66,11 @@ jobs:
               --capabilities CAPABILITY_NAMED_IAM
       - run:
           name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
-          # EC2インスタンスの名前を指定、情報を取得、リージョンを指定、タグでフィルタリング、パブリックアドレスを指定
-          # 出力形式をテキストに指定
-          # EC2のパブリックIPが取得できなかった場合、エラーメッセージを表示
-          # EC2のパブリックIPが取得できた場合、インベントリファイルを作成
-          # EC2のパブリックIPをインベントリに追加、インベントリファイルの内容を表示
+# EC2インスタンスの名前を指定、情報を取得、リージョンを指定、タグでフィルタリング、パブリックアドレスを指定
+# 出力形式をテキストに指定
+# EC2のパブリックIPが取得できなかった場合、エラーメッセージを表示
+# EC2のパブリックIPが取得できた場合、インベントリファイルを作成
+# EC2のパブリックIPをインベントリに追加、インベントリファイルの内容を表示
           command: |
             INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
             EC2_PUBLIC_IP=$(aws ec2 describe-instances \  
@@ -89,13 +89,20 @@ jobs:
           name: Test Ansible Connection # Ansibleの接続テスト
           command: |
             ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log
+            if ! grep -q "SUCCESS" ansible_ping_result.log; then
+              echo "Error: Ansible connection test failed. Check ansible_ping_result.log for details."
+              exit 1
+            fi
       - add_ssh_keys: # SSHキーを追加
           fingerprints: # SSHキーのフィンガープリントを指定
             - "6f:74:61:24:ee:da:cb:01:f1:e6:11:f8:b8:95:ae:38:db:32:e3:71"
       - run:
           name: Test SSH Connection # SSH接続テスト
           command: |
-            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} "echo 'Connected via SSH'"
+            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} "echo 'Connected via SSH'" || {
+              echo "Error: SSH connection failed. Verify the SSH key and instance configuration."
+              exit 1
+            }
 
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
