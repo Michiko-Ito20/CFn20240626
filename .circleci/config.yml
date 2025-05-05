@@ -111,7 +111,7 @@ jobs:
       tag: "3.8"
     steps:
       - checkout
-      - install-dependencies  # 再度依存関係をインストール
+      - install-dependencies  # 再度commandsでインストール
       - run:
           name: Verify Ansible Installation # Ansibleのインストール確認
           command: |
@@ -121,8 +121,9 @@ jobs:
             ansible-playbook --version
       - run:
           name: Set Ansible Roles Path  # Ansibleのロールパスを設定
+# # ロールのパスを指定
           command: |
-            export ANSIBLE_ROLES_PATH=./myrole  # ロールのパスを指定
+            export ANSIBLE_ROLES_PATH=./myrole 
 
   delete-cfn-stack: # スタック削除ジョブ
     executor:
