@@ -9,16 +9,13 @@ commands:
     steps:
       - run:
           name: Install dependencies  # 依存関係をインストール
-          command: |  # Install AWS CLI and Ansible
-            # 更新
+          # 更新、AWS CLIインストール、pipをアップグレード
+          # AnsibleとAWS SDKインストール、Ansible GalaxyからAWSコレクションをインストール
+          command: |  
             sudo apt update 
-            # AWS CLIをインストール
             sudo apt install -y python3 python3-pip awscli  
-            # pipをアップグレード
             pip3 install --upgrade pip  
-            # AnsibleとAWS SDKをインストール
             pip3 install ansible[aws] boto3 botocore  
-            # Ansible GalaxyからAWSコレクションをインストール
             ansible-galaxy collection install amazon.aws --force  
 
 jobs:
@@ -38,10 +35,10 @@ jobs:
             ansible-playbook --version
       - run:
           name: Check Installed Files # インストールされたファイルを確認
+          # ローカルディレクトリの内容を表示
+          # ローカルバイナリディレクトリの内容を表示
           command: | 
-            # ローカルディレクトリの内容を表示
             ls -la ~/.local 
-            # ローカルバイナリディレクトリの内容を表示
             ls -la ~/.local/bin 
       - run:
           name: Create CloudFormation Stack for VPC # VPCスタックを作成
@@ -69,32 +66,25 @@ jobs:
               --capabilities CAPABILITY_NAMED_IAM
       - run:
           name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
+          # EC2インスタンスの名前を指定、情報を取得、リージョンを指定、タグでフィルタリング、パブリックアドレスを指定
+          # 出力形式をテキストに指定
+          # EC2のパブリックIPが取得できなかった場合、エラーメッセージを表示
+          # EC2のパブリックIPが取得できた場合、インベントリファイルを作成
+          # EC2のパブリックIPをインベントリに追加、インベントリファイルの内容を表示
           command: |
             INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            # EC2インスタンスの名前を指定
             EC2_PUBLIC_IP=$(aws ec2 describe-instances \  
-            # EC2インスタンスの情報を取得
               --region ap-northeast-1 \ 
-              # 東京リージョン
               --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \ 
-              # タグでフィルタリング
               --query "Reservations[*].Instances[*].PublicIpAddress" \  
-              # パブリックIPアドレスを取得
               --output text)  
-              # 出力形式をテキストに指定
             if [ -z "$EC2_PUBLIC_IP" ]; then  
-            # EC2のパブリックIPが取得できなかった場合
               echo "Error: EC2 Public IP could not be retrieved." 
-              # エラーメッセージを表示
               exit 1
             fi  
-            # EC2のパブリックIPが取得できた場合
             echo "[ec2]" > myrole/tests/inventory 
-            # インベントリファイルを作成
             echo "${EC2_PUBLIC_IP}" >> myrole/tests/inventory 
-            # EC2のパブリックIPをインベントリに追加
             cat myrole/tests/inventory  
-            # インベントリファイルの内容を表示
       - run:
           name: Test Ansible Connection # Ansibleの接続テスト
           command: |
