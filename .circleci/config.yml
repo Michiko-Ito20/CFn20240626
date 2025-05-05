@@ -8,13 +8,18 @@ commands:
     description: "Install required dependencies"
     steps:
       - run:
-          name: Install dependencies
-          command: |
-            sudo apt update
-            sudo apt install -y python3 python3-pip awscli
-            pip3 install --upgrade pip
-            pip3 install ansible[aws] boto3 botocore
-            ansible-galaxy collection install amazon.aws --force
+          name: Install dependencies  # 依存関係をインストール
+          command: |  # Install AWS CLI and Ansible
+            # 更新
+            sudo apt update 
+            # AWS CLIをインストール
+            sudo apt install -y python3 python3-pip awscli  
+            # pipをアップグレード
+            pip3 install --upgrade pip  
+            # AnsibleとAWS SDKをインストール
+            pip3 install ansible[aws] boto3 botocore  
+            # Ansible GalaxyからAWSコレクションをインストール
+            ansible-galaxy collection install amazon.aws --force  
 
 jobs:
   setup-environment:
@@ -25,27 +30,29 @@ jobs:
       - checkout  # リポジトリをチェックアウト
       - install-dependencies  # ここでcommandsを呼び出し
       - run:
-          name: Verify Ansible and AnsiblePlaybook Installation
+          name: Verify Ansible and AnsiblePlaybook Installation # AnsibleとAnsiblePlaybookのインストール確認
           command: |
             which ansible
             ansible --version
             which ansible-playbook
             ansible-playbook --version
       - run:
-          name: Check Installed Files
-          command: |
-            ls -la ~/.local
-            ls -la ~/.local/bin
+          name: Check Installed Files # インストールされたファイルを確認
+          command: | 
+            # ローカルディレクトリの内容を表示
+            ls -la ~/.local 
+            # ローカルバイナリディレクトリの内容を表示
+            ls -la ~/.local/bin 
       - run:
-          name: Create CloudFormation Stack for VPC
+          name: Create CloudFormation Stack for VPC # VPCスタックを作成
           command: |
             aws cloudformation deploy \
               --template-file VPCtest2406.yml \
               --stack-name AnsibleStackVPC \
               --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
+              --capabilities CAPABILITY_NAMED_IAM 
       - run:
-          name: Create CloudFormation Stack for EC2-ALB-SG
+          name: Create CloudFormation Stack for EC2-ALB-SG  # EC2-ALB-SGスタックを作成
           command: |
             aws cloudformation deploy \
               --template-file EC2,ALB,SG2406.yml \
@@ -53,7 +60,7 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
-          name: Create CloudFormation Stack for RDS
+          name: Create CloudFormation Stack for RDS # RDSスタックを作成
           command: |
             aws cloudformation deploy \
               --template-file RDStest2406.yml \
@@ -61,34 +68,47 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
-          name: Get EC2 Public IP and Update Inventory
+          name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
           command: |
-            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance"
-            EC2_PUBLIC_IP=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
-              --query "Reservations[*].Instances[*].PublicIpAddress" \
-              --output text)
-            if [ -z "$EC2_PUBLIC_IP" ]; then
-              echo "Error: EC2 Public IP could not be retrieved."
+            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
+            # EC2インスタンスの名前を指定
+            EC2_PUBLIC_IP=$(aws ec2 describe-instances \  
+            # EC2インスタンスの情報を取得
+              --region ap-northeast-1 \ 
+              # 東京リージョン
+              --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \ 
+              # タグでフィルタリング
+              --query "Reservations[*].Instances[*].PublicIpAddress" \  
+              # パブリックIPアドレスを取得
+              --output text)  
+              # 出力形式をテキストに指定
+            if [ -z "$EC2_PUBLIC_IP" ]; then  
+            # EC2のパブリックIPが取得できなかった場合
+              echo "Error: EC2 Public IP could not be retrieved." 
+              # エラーメッセージを表示
               exit 1
-            fi
-            echo "${EC2_PUBLIC_IP}" >> myrole/tests/inventory
-            cat myrole/tests/inventory
+            fi  
+            # EC2のパブリックIPが取得できた場合
+            echo "[ec2]" > myrole/tests/inventory 
+            # インベントリファイルを作成
+            echo "${EC2_PUBLIC_IP}" >> myrole/tests/inventory 
+            # EC2のパブリックIPをインベントリに追加
+            cat myrole/tests/inventory  
+            # インベントリファイルの内容を表示
       - run:
-          name: Test Ansible Connection
+          name: Test Ansible Connection # Ansibleの接続テスト
           command: |
             ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log
-      - add_ssh_keys:
-          fingerprints:
+      - add_ssh_keys: # SSHキーを追加
+          fingerprints: # SSHキーのフィンガープリントを指定
             - "6f:74:61:24:ee:da:cb:01:f1:e6:11:f8:b8:95:ae:38:db:32:e3:71"
       - run:
-          name: Test SSH Connection
+          name: Test SSH Connection # SSH接続テスト
           command: |
             ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} "echo 'Connected via SSH'"
 
 
-  ansible-playbook:
+  ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor:
       name: python/default
       tag: "3.8"
@@ -96,41 +116,37 @@ jobs:
       - checkout
       - install-dependencies  # 再度依存関係をインストール
       - run:
-          name: Verify Ansible Installation
+          name: Verify Ansible Installation # Ansibleのインストール確認
           command: |
             which ansible
             ansible --version
             which ansible-playbook
             ansible-playbook --version
       - run:
-          name: Set Ansible Roles Path
+          name: Set Ansible Roles Path  # Ansibleのロールパスを設定
           command: |
-            export ANSIBLE_ROLES_PATH=./myrole
-      - run:
-          name: Run Ansible Playbook
-          command: |
-            ansible-playbook -i myrole/tests/inventory -c local Ansible_lesson.yml
+            export ANSIBLE_ROLES_PATH=./myrole  # ロールのパスを指定
 
-  delete-cfn-stack:
+  delete-cfn-stack: # スタック削除ジョブ
     executor:
-      name: python/default
-      tag: "3.8"
+      name: python/default  # Python Orbを使用
+      tag: "3.8"  # Python 3.8を指定
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
-          name: Delete CloudFormation Stack for RDS
+          name: Delete CloudFormation Stack for RDS #RDSスタックを削除
           command: |
             aws cloudformation delete-stack \
               --stack-name AnsibleStackRDS \
               --region ap-northeast-1
       - run:
-          name: Delete CloudFormation Stack for EC2-ALB-SG
+          name: Delete CloudFormation Stack for EC2-ALB-SG  #EC2-ALB-SGスタックを削除
           command: |
             aws cloudformation delete-stack \
               --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1
       - run:
-          name: Delete CloudFormation Stack for VPC
+          name: Delete CloudFormation Stack for VPC #VPCスタックを削除
           command: |
             aws cloudformation delete-stack \
               --stack-name AnsibleStackVPC \
@@ -139,10 +155,7 @@ jobs:
 workflows:
   default:
     jobs:
-      - setup-environment:
-          filters:
-            branches:
-              ignore: []  # すべてのブランチで実行
+      - setup-environment
       - ansible-playbook:
           requires:
             - setup-environment
