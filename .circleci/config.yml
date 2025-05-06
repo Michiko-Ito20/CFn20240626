@@ -83,9 +83,14 @@ jobs:
       - run:
           name: Test Ansible Connection # Ansibleの接続テスト
           command: |
-            ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log
+            ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log 2>&1 || {
+              echo "Error: Ansible command failed. Check ansible_ping_result.log for details."
+              cat ansible_ping_result.log
+              exit 1
+            }
             if ! grep -q "SUCCESS" ansible_ping_result.log; then
               echo "Error: Ansible connection test failed. Check ansible_ping_result.log for details."
+              cat ansible_ping_result.log
               exit 1
             fi
       - add_ssh_keys: # SSHキーを追加
@@ -98,7 +103,6 @@ jobs:
               echo "Error: SSH connection failed. Verify the SSH key and instance configuration."
               exit 1
             }
-
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor:
