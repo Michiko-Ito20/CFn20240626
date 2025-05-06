@@ -83,6 +83,7 @@ jobs:
       - run:
           name: Test Ansible Connection # Ansibleの接続テスト
           command: |
+            export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no"
             ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log 2>&1 || {
               echo "Error: Ansible command failed. Check ansible_ping_result.log for details."
               cat ansible_ping_result.log
