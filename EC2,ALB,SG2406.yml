@@ -55,7 +55,7 @@ Resources:                                        #どういったコンポー�
     Type: AWS::EC2::Instance                   #EC2インスタンス
     Properties:
       ImageId: ami-01ae6169b82b38e3b           #amiのID最新
-      KeyName: lecuture04                       #使用するキーペア名
+      KeyName: Ansible_lesson                  #使用するキーペア名
       InstanceType: t3.micro                   #インスタスのタイプ(今回は再挑戦で使用したのを採用)
       InstanceInitiatedShutdownBehavior: stop  #インスタンスの削除保護の有効化「停止」(「削除」も選択できる)
       Tenancy: default                         #テナント属性はデフォルト(AWS 基盤側となるハードウェアは他の利用者と共有する状態で提供)
