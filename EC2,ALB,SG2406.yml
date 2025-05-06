@@ -14,7 +14,7 @@ Resources:                                        #どういったコンポー�
       SecurityGroupIngress:                       #セキュリティグループを挿入
       - 
         IpProtocol: tcp                           #IPの通信規約
-        CidrIp: 10.0.0.0/16                       #サイダーIP省略可能と書いてあるが
+        CidrIp: 10.0.0.0/0                       #サイダーIP省略可能と書いてあるが
         FromPort: "22"                            #インバウンドルールSSHサーバの接続待ち受け用
         ToPort: "22"                              #アウトバウンドルールSSHサーバの接続待ち受け用
 
