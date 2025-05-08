@@ -1,9 +1,9 @@
 ---
 - name: Configure Git and Nginx using roles
-  hosts: localhost
+  hosts: ec2
   become: yes
 
   roles:
-    - git
-    - nginx
+    - role: myrole/git
+    - role: myrole/nginx
 
