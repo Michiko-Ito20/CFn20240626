@@ -3,13 +3,12 @@
 
 # Nginxをインストール
 - name: Install Nginx
-  ansible.builtin.apt:
-    name: nginx
-    state: present
+  ansible.builtin.shell:
+    cmd: |
+      sudo apt update && sudo apt install -y nginx
 
 # Nginxを起動して有効化
 - name: Start and enable Nginx
-  ansible.builtin.service:
-    name: nginx
-    state: started
-    enabled: true
+  ansible.builtin.shell:
+    cmd: |
+      sudo systemctl start nginx && sudo systemctl enable nginx
