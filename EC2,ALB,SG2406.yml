@@ -49,7 +49,7 @@ Resources:
   TestEC2Instance:  # EC2インスタンス作成
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Sub "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>::/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2" # 最新のAmazon Linux 2 AMI
+      ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}" # 最新のAmazon Linux 2 AMI
       KeyName: Ansible_lesson                     # SSHキー（必要に応じて削除可能）
       InstanceType: t3.micro                      # インスタンスタイプ
       IamInstanceProfile: !Ref EC2InstanceProfile             # IAMインスタンスプロファイルを参照
