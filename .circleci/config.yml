@@ -9,8 +9,6 @@ commands:
     steps:
       - run:
           name: Install dependencies  # 依存関係をインストール
-          # 更新、AWS CLIインストール、pipをアップグレード
-          # AnsibleとAWS SDKインストール、Ansible GalaxyからAWSコレクションをインストール
           command: |  
             sudo apt update 
             sudo apt install -y python3 python3-pip awscli  
@@ -35,8 +33,6 @@ jobs:
             ansible-playbook --version
       - run:
           name: Check Installed Files # インストールされたファイルを確認
-          # ローカルディレクトリの内容を表示
-          # ローカルバイナリディレクトリの内容を表示
           command: | 
             ls -la ~/.local 
             ls -la ~/.local/bin 
@@ -65,25 +61,25 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
-          name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
+          name: Get EC2 Instance ID and Update Inventory  # EC2のインスタンスIDを取得してインベントリを更新
           command: |
             INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            EC2_PUBLIC_IP=$(aws ec2 describe-instances \
+            INVENTORY_FILE="myrole/tests/inventory"
+            INSTANCE_ID=$(aws ec2 describe-instances \
               --region ap-northeast-1 \
               --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
-              --query "Reservations[*].Instances[*].PublicIpAddress" \
+              --query "Reservations[*].Instances[*].InstanceId" \
               --output text)
-            if [ -z "$EC2_PUBLIC_IP" ]; then  
-              echo "Error: EC2 Public IP could not be retrieved." 
+            if [ -z "$INSTANCE_ID" ]; then  
+              echo "Error: EC2 Instance ID could not be retrieved." 
               exit 1
             fi
-            echo "[ec2]" > myrole/tests/inventory 
-            echo "${EC2_PUBLIC_IP}" >> myrole/tests/inventory 
-            cat myrole/tests/inventory  
+            echo "[ec2]" > $INVENTORY_FILE 
+            echo "${INSTANCE_ID} ansible_connection=amazon.aws.ssm" >> $INVENTORY_FILE 
+            cat $INVENTORY_FILE  
       - run:
-          name: Test Ansible Connection # Ansibleの接続テスト
+          name: Test Ansible Connection via SSM # Ansibleの接続テスト（SSM経由）
           command: |
-            export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no"
             ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log 2>&1 || {
               echo "Error: Ansible command failed. Check ansible_ping_result.log for details."
               cat ansible_ping_result.log
@@ -94,16 +90,6 @@ jobs:
               cat ansible_ping_result.log
               exit 1
             fi
-      - add_ssh_keys: # SSHキーを追加
-          fingerprints: # SSHキーのフィンガープリントを指定
-            - "6f:74:61:24:ee:da:cb:01:f1:e6:11:f8:b8:95:ae:38:db:32:e3:71"
-      - run:
-          name: Test SSH Connection # SSH接続テスト
-          command: |
-            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} "echo 'Connected via SSH'" || {
-              echo "Error: SSH connection failed. Verify the SSH key and instance configuration."
-              exit 1
-            }
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor:
@@ -121,9 +107,12 @@ jobs:
             ansible-playbook --version
       - run:
           name: Set Ansible Roles Path  # Ansibleのロールパスを設定
-# # ロールのパスを指定
           command: |
             export ANSIBLE_ROLES_PATH=./myrole 
+      - run:
+          name: Run Ansible Playbook # Ansibleプレイブックを実行
+          command: |
+            ansible-playbook -i myrole/tests/inventory playbook.yml
 
   delete-cfn-stack: # スタック削除ジョブ
     executor:
