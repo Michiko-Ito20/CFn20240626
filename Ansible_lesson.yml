@@ -2,6 +2,8 @@
 - name: Configure Git and Nginx using roles
   hosts: ec2
   become: yes
+  connection: amazon.aws.ssm  # SSM接続を明示的に指定
+  gather_facts: no           # 必要に応じて変更
 
   roles:
     - role: myrole/git
