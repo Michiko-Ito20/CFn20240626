@@ -11,11 +11,11 @@ commands:
           name: Install dependencies  # 依存関係をインストール
           command: |  
             sudo apt update 
-            sudo apt install -y python3 python3-pip awscli  
+            # APTでインストール可能なパッケージをインストール
+            sudo apt install -y python3 python3-pip awscli ansible python3-boto3 python3-botocore  
+            # 必要に応じてpipで追加の依存関係をインストール
             pip3 install --upgrade pip  
-            pip3 install "ansible-core>=2.15.0"   # ansible-coreを2.15.0以降に指定
-            pip3 install ansible[aws] boto3 botocore  
-            ansible-galaxy collection install amazon.aws --force  
+            ansible-galaxy collection install amazon.aws --force  # 必要なコレクションをインストール
 
 jobs:
   setup-environment:
