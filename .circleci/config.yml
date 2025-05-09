@@ -18,8 +18,7 @@ commands:
             # 必要に応じてpipで追加の依存関係をインストール
             pip3 install --upgrade pip  
             ansible-galaxy collection install amazon.aws --force  # 必要なコレクションをインストール
-
-  check-Python-version:
+  check-python-version:
   # Pythonのバージョンを確認するためのコマンド
     description: "check python version"
     steps:
@@ -33,7 +32,7 @@ jobs:
     executor: pythons
     steps:
       - checkout  # リポジトリをチェックアウト
-      - check-Python-version  # Pythonのバージョンを確認
+      - check-python-version # Pythonのバージョンを確認
       - install-dependencies  # ここでcommandsを呼び出し
       - run:
           name: Verify Ansible and AnsiblePlaybook Installation # AnsibleとAnsiblePlaybookのインストール確認
