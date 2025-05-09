@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@3.1.0  # 最新バージョンのPython Orbを使用
+  python: cimg/python@1.4    # 最新バージョンのPython Orbを使用
 
 commands:
   install-dependencies:
