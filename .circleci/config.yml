@@ -1,7 +1,9 @@
 version: 2.1
 
-orbs:
-  python: cimg/python@1.8.1    # 最新バージョンのPython Orbを使用
+executors:
+  python:
+    docker:
+      - image: cimg/python  # PythonのDockerイメージを使用
 
 commands:
   install-dependencies:
@@ -19,9 +21,7 @@ commands:
 
 jobs:
   setup-environment:
-    executor:
-      name: python/default
-      tag: "3.8"  # Python 3.8を指定
+    executor: python
     steps:
       - checkout  # リポジトリをチェックアウト
       - install-dependencies  # ここでcommandsを呼び出し
@@ -93,9 +93,7 @@ jobs:
             fi
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
-    executor:
-      name: python/default
-      tag: "3.8"
+    executor: python
     steps:
       - checkout
       - install-dependencies  # 再度commandsでインストール
@@ -116,9 +114,7 @@ jobs:
             ansible-playbook -i myrole/tests/inventory playbook.yml
 
   delete-cfn-stack: # スタック削除ジョブ
-    executor:
-      name: python/default  # Python Orbを使用
-      tag: "3.8"  # Python 3.8を指定
+    executor: python  # Pythonを呼び出し
     steps:
       - checkout  # リポジトリをチェックアウト
       - run:
