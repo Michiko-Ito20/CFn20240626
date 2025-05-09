@@ -29,7 +29,7 @@ commands:
 
 jobs:
   setup-environment:
-    executor: pythons
+    executor: python
     steps:
       - checkout  # リポジトリをチェックアウト
       - check-python-version # Pythonのバージョンを確認
