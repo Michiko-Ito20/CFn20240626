@@ -3,7 +3,7 @@ version: 2.1
 executors:
   python:
     docker:
-      - image: cimg/python  # PythonのDockerイメージを使用
+      - image: cimg/python:3.13.3  # PythonのDockerイメージを使用
 
 commands:
   install-dependencies:
