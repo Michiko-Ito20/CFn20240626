@@ -16,7 +16,7 @@ commands:
             # APTでインストール可能なパッケージをインストール
             sudo apt install -y python3 python3-pip awscli ansible python3-boto3 python3-botocore  
             # 必要に応じてpipで追加の依存関係をインストール
-            pip3 install --upgrade pip  
+            # pip3 install --upgrade pip  
             ansible-galaxy collection install amazon.aws --force  # 必要なコレクションをインストール
   check-python-version:
   # Pythonのバージョンを確認するためのコマンド
@@ -62,14 +62,14 @@ jobs:
               --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Create CloudFormation Stack for RDS # RDSスタックを作成
-          command: |
-            aws cloudformation deploy \
-              --template-file RDStest2406.yml \
-              --stack-name AnsibleStackRDS \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
+      # - run:
+      #     name: Create CloudFormation Stack for RDS # RDSスタックを作成
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file RDStest2406.yml \
+      #         --stack-name AnsibleStackRDS \
+      #         --region ap-northeast-1 \
+      #         --capabilities CAPABILITY_NAMED_IAM
       - run:
           name: Get EC2 Instance ID and Update Inventory  # EC2のインスタンスIDを取得してインベントリを更新
           command: |
