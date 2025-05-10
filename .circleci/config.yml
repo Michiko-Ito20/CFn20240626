@@ -12,14 +12,19 @@ commands:
       - run:
           name: Install dependencies  # 依存関係をインストール
           command: |  
-            sudo apt update 
             # APTでインストール可能なパッケージをインストール
+            sudo apt update 
             sudo apt install -y awscli python3-boto3 python3-botocore  
-            pip install ansible
             # 必要に応じてpipで追加の依存関係をインストール
+            pip install ansible
             pip install --upgrade pip  
             pip install --upgrade ansible
-            ansible-galaxy collection install amazon.aws --force  # 必要なコレクションをインストール
+            # AWS SSM接続に必要なパッケージをインストール
+            pip install --upgrade pywinrm
+            # 必要なコレクションをインストール
+            ansible-galaxy collection install amazon.aws --force  
+            # 接続プラグインが利用可能か確認
+            ansible-doc -t connection -l | grep amazon.aws.ssm || echo "SSM plugin not found"
   check-python-version:
   # Pythonのバージョンを確認するためのコマンド
     description: "check python version"
