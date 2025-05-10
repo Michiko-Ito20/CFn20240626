@@ -14,9 +14,7 @@ commands:
           command: |  
             sudo apt update 
             # APTでインストール可能なパッケージをインストール
-            sudo apt install -y python3 python3-pip awscli python3-boto3 python3-botocore  
-            sudo apt remove -y ansible
-            # pipを最新化し、最新のansibleをインストール
+            sudo apt install -y awscli python3-boto3 python3-botocore  
             pip install ansible
             # 必要に応じてpipで追加の依存関係をインストール
             pip install --upgrade pip  
