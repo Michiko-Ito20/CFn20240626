@@ -15,14 +15,31 @@ commands:
             # APTでインストール可能なパッケージをインストール
             sudo apt update 
             sudo apt install -y awscli python3-boto3 python3-botocore  
+            # Session Managerプラグインのインストール（Amazon Linux 2/Ubuntu向け）
+            curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
+            sudo dpkg -i session-manager-plugin.deb
+            # プラグインが正しくインストールされたか確認
+            session-manager-plugin --version || echo "Session Manager Plugin installation failed"
+
             # 必要に応じてpipで追加の依存関係をインストール
-            pip install ansible
             pip install --upgrade pip  
+            pip install ansible
             pip install --upgrade ansible
             # AWS SSM接続に必要なパッケージをインストール
             pip install --upgrade pywinrm
+
+            # 環境変数を設定してコレクションパスを確認可能にする
+            export ANSIBLE_COLLECTIONS_PATHS=~/.ansible/collections
+
             # 必要なコレクションをインストール
             ansible-galaxy collection install amazon.aws --force  
+
+            # インストール確認のため、パスを表示
+            echo "Collection paths:"
+            ansible-config dump | grep COLLECTIONS_PATHS
+            echo "Installed collections:"
+            ansible-galaxy collection list
+
             # 接続プラグインが利用可能か確認
             ansible-doc -t connection -l | grep amazon.aws.ssm || echo "SSM plugin not found"
   check-python-version:
