@@ -31,10 +31,10 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Path: "/"
-      RoleName: !Sub ${AWS::StackName}-ec2-role   # IAMロールの名前
+      RoleName: !Sub ${AWS::StackName}-circleci-user-role   # IAMロール名にcircleci-userを含める
       Tags:
         - Key: Name
-          Value: !Sub ${AWS::StackName}-ec2-role
+          Value: !Sub ${AWS::StackName}-circleci-user-role
       AssumeRolePolicyDocument:                   # EC2がこのロールを引き受けるためのポリシー
         Version: 2012-10-17
         Statement:
@@ -74,6 +74,10 @@ Resources:
       UserData: !Base64 |                         # 起動時に実行するスクリプト
         #!/bin/bash
         sudo hostnamectl set-hostname TEST-LINUX-INSTANCE
+        # SSM Agentが最新であることを確認
+        sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+        sudo systemctl enable amazon-ssm-agent
+        sudo systemctl start amazon-ssm-agent
 
   # ALBセキュリティグループ
   ALBSecurityGroup:
