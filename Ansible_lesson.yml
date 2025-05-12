@@ -4,6 +4,10 @@
   become: yes
   connection: amazon.aws.ssm  # SSM接続を明示的に指定
   gather_facts: no           # 必要に応じて変更
+  vars:
+    ansible_aws_ssm_bucket_name: "ansible-ssm-bucket-AnsibleStackS3"  # S3バケット名（必要に応じて）
+    ansible_aws_ssm_region: "ap-northeast-1" # 東京リージョン
+    ansible_python_interpreter: "/usr/bin/python" # Pythonインタプリタパス
 
   roles:
     - role: myrole/git
