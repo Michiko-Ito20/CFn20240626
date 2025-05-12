@@ -117,8 +117,15 @@ jobs:
               exit 1
             fi
             echo "[ec2]" > $INVENTORY_FILE 
-            echo "${INSTANCE_ID} ansible_connection=amazon.aws.ssm" >> $INVENTORY_FILE 
-            cat $INVENTORY_FILE  
+            echo "${INSTANCE_ID}" >> $INVENTORY_FILE
+            echo "" >> $INVENTORY_FILE  # 空行を追加
+            echo "[ec2:vars]" >> $INVENTORY_FILE 
+            echo "ansible_connection=aws_ssm" >> $INVENTORY_FILE 
+            echo "ansible_aws_ssm_region=ap-northeast-1" >> $INVENTORY_FILE 
+            cat $INVENTORY_FILE
+            # echo "[ec2]" > $INVENTORY_FILE 
+            # echo "${INSTANCE_ID} ansible_connection=amazon.aws.ssm" >> $INVENTORY_FILE 
+            # cat $INVENTORY_FILE  
       - run:
           name: Test Ansible Connection via SSM # Ansibleの接続テスト（SSM経由）
           command: |
