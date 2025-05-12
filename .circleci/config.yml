@@ -26,7 +26,7 @@ commands:
             pip install ansible
             pip install --upgrade ansible
             # AWS SSM接続に必要なパッケージをインストール
-            pip install --upgrade pywinrm
+            pip install boto3 botocore pywinrm
 
             # 環境変数を設定してコレクションパスを確認可能にする
             export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
@@ -95,6 +95,14 @@ jobs:
       #         --region ap-northeast-1 \
       #         --capabilities CAPABILITY_NAMED_IAM
       - run:
+          name: Create CloudFormation Stack for S3 # S3スタックを作成
+          command: |
+            aws cloudformation deploy \
+              --template-file S3test2406.yml \
+              --stack-name AnsibleStackS3 \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
           name: Get EC2 Instance ID and Update Inventory  # EC2のインスタンスIDを取得してインベントリを更新
           command: |
             INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
@@ -150,6 +158,12 @@ jobs:
     executor: python  # Pythonを呼び出し
     steps:
       - checkout  # リポジトリをチェックアウト
+      - run:
+          name: Delete CloudFormation Stack for S3 #S3スタックを削除
+          command: |
+            aws cloudformation delete-stack \
+              --stack-name AnsibleStackS3 \
+              --region ap-northeast-1
       - run:
           name: Delete CloudFormation Stack for RDS #RDSスタックを削除
           command: |
