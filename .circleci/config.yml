@@ -99,7 +99,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file S3test2406.yml \
-              --stack-name AnsibleStackS3 \
+              --stack-name ansible-stack-bucket \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
