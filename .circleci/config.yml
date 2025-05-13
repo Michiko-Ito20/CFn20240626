@@ -25,15 +25,28 @@ commands:
             pip install --upgrade pip  
             pip install ansible
             pip install --upgrade ansible
-            # AWS SSM接続に必要なパッケージをインストール
+            # ansible-core 2.13.9以上を明示的にインストール  
+            pip install ansible-core>=2.13.9
             pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm
+            # AWS SSM接続に必要なパッケージをインストール
+            # pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm
             # pip install boto3 botocore pywinrm
 
             # 環境変数を設定してコレクションパスを確認可能にする
             export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
+            mkdir -p $ANSIBLE_COLLECTIONS_PATH
+            # 環境変数を設定してコレクションパスを確認可能にする
+            # export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
 
-            # 必要なコレクションをインストール
+            # ansible-galaxyとansible-coreバージョンを確認
+            ansible --version
+            ansible-galaxy --version
+
+            # # コレクションをインストール
             ansible-galaxy collection install amazon.aws --force  
+            # ecgalaxy.aws_ssmパッケージをインストール（指定されていた場合）
+            ansible-galaxy collection install ecgalaxy.aws_ssm --force
+
 
             # インストール確認のため、パスを表示
             echo "Collection paths:"
@@ -41,8 +54,12 @@ commands:
             echo "Installed collections:"
             ansible-galaxy collection list
 
+            # SSMプラグインを探索
+            find ~/.ansible -name "*ssm*.py" -type f
             # 接続プラグインが利用可能か確認
-            ansible-doc -t connection -l | grep amazon.aws.ssm || echo "SSM plugin not found"
+            # ansible-doc -t connection -l | grep amazon.aws.ssm || echo "SSM plugin not found"
+            # プラグイン名確認用のコマンド
+            ansible-doc -t connection -l | grep -i ssm
   check-python-version:
   # Pythonのバージョンを確認するためのコマンド
     description: "check python version"
@@ -117,15 +134,15 @@ jobs:
               echo "Error: EC2 Instance ID could not be retrieved." 
               exit 1
             fi
-            # echo "[ec2]" > $INVENTORY_FILE 
-            # echo "${INSTANCE_ID} ansible_connection=amazon.aws.ssm" >> $INVENTORY_FILE 
-            echo "[ec2]" > $INVENTORY_FILE 
-            echo "${INSTANCE_ID}" >> $INVENTORY_FILE
-            echo "" >> $INVENTORY_FILE
-            echo "[ec2:vars]" >> $INVENTORY_FILE
-            echo "ansible_connection=aws_ssm" >> $INVENTORY_FILE
-            echo "ansible_aws_ssm_region=ap-northeast-1" >> $INVENTORY_FILE
-            cat $INVENTORY_FILE 
+              # Get EC2 Instance ID and Update Inventory部分を変更
+              echo "[ec2]" > $INVENTORY_FILE 
+              echo "${INSTANCE_ID}" >> $INVENTORY_FILE
+              echo "" >> $INVENTORY_FILE
+              echo "[ec2:vars]" >> $INVENTORY_FILE
+              # amazon.aws.ssmの代わりにecgalaxy.aws_ssmを使用
+              echo "ansible_connection=aws_ssm" >> $INVENTORY_FILE
+              echo "ansible_aws_ssm_region=ap-northeast-1" >> $INVENTORY_FILE
+              cat $INVENTORY_FILE
       - run:
           name: Create ansible.cfg file
           command: |
@@ -138,7 +155,8 @@ jobs:
             echo "enable_plugins = aws_ec2" >> ansible.cfg
             echo "" >> ansible.cfg
             echo "[connection]" >> ansible.cfg
-            echo "enable_plugins = aws_ssm" >> ansible.cfg
+            # 両方のプラグインを有効化
+            echo "connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection:~/.ansible/collections/ansible_collections/ecgalaxy/aws_ssm/plugins/connection" >> ansible.cfg
 
             # 作成された設定ファイルを確認
             cat ansible.cfg
