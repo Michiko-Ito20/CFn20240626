@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description:                                    #スタックの説明
-  lecture10-CFn-RDS
+Description: "Absible_CFn,Create-RDS"           #スタックの説明
 
 #DBを作成
 Resources:                                      #どういったコンポーネントを作るかを記載
