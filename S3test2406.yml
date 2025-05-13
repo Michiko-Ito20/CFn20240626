@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "AnsibleとSSM接続用のS3アクセス設定"
+Description: "Absible_CFn,Create-SSM-S3bBucket"  # スタックの説明
 
 Resources: 
   # S3バケットの作成
