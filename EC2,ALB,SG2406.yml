@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "AnsibleのCFn,EC2,ALB,SG作成"         # スタックの説明
+Description: "Absible_CFn,Create-EC2,ALB,SG"         # スタックの説明
 
 Resources:
   # EC2セキュリティグループ
