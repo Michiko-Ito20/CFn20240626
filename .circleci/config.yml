@@ -23,34 +23,24 @@ commands:
 
             # 必要に応じてpipで追加の依存関係をインストール
             pip install --upgrade pip  
-            pip install ansible
-            pip install --upgrade ansible
-            # ansible-core 2.13.9以上を明示的にインストール  
-            pip install ansible-core>=2.13.9
-            pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm
-            # AWS SSM接続に必要なパッケージをインストール
-            # pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm
-            # pip install boto3 botocore pywinrm
+            pip install ansible-core>=2.13.9  # これを優先
+            pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm  # 必要なバージョンを指定
 
             # 環境変数を設定してコレクションパスを確認可能にする
             export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
             mkdir -p $ANSIBLE_COLLECTIONS_PATH
-            # 環境変数を設定してコレクションパスを確認可能にする
-            # export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
 
             # ansible-galaxyとansible-coreバージョンを確認
             ansible --version
             ansible-galaxy --version
 
-            # # コレクションをインストール
+            # コレクションをインストール
             ansible-galaxy collection install amazon.aws --force  
-            # ecgalaxy.aws_ssmパッケージをインストール（指定されていた場合）
             ansible-galaxy collection install ecgalaxy.aws_ssm --force
-
 
             # インストール確認のため、パスを表示
             echo "Collection paths:"
-            ansible-config dump | grep COLLECTIONS_PATHS
+            ansible-config dump | grep COLLECTIONS_PATH
             echo "Installed collections:"
             ansible-galaxy collection list
 
@@ -142,22 +132,23 @@ jobs:
               # amazon.aws.ssmの代わりにecgalaxy.aws_ssmを使用
               echo "ansible_connection=aws_ssm" >> $INVENTORY_FILE
               echo "ansible_aws_ssm_region=ap-northeast-1" >> $INVENTORY_FILE
+              echo "ansible_python_interpreter=/usr/bin/python" >> $INVENTORY_FILE
+              echo "ansible_aws_ssm_bucket_name=ansible-ssm-bucket-ansible-stack-bucket" >> $INVENTORY_FILE
               cat $INVENTORY_FILE
       - run:
           name: Create ansible.cfg file
           command: |
-            # プロジェクトのルートディレクトリに ansible.cfg を作成
+            # ansible.cfg ファイルを作成
             echo "[defaults]" > ansible.cfg
-            echo "collections_paths = ~/.ansible/collections" >> ansible.cfg
-            echo "connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection" >> ansible.cfg
+            echo "collections_path = ~/.ansible/collections" >> ansible.cfg
+            echo "connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection:~/.ansible/collections/ansible_collections/ecgalaxy/aws_ssm/plugins/connection" >> ansible.cfg
             echo "" >> ansible.cfg
             echo "[inventory]" >> ansible.cfg
             echo "enable_plugins = aws_ec2" >> ansible.cfg
             echo "" >> ansible.cfg
             echo "[connection]" >> ansible.cfg
-            # 両方のプラグインを有効化
-            echo "connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection:~/.ansible/collections/ansible_collections/ecgalaxy/aws_ssm/plugins/connection" >> ansible.cfg
-
+            echo "enable_plugins = aws_ssm ecgalaxy.aws_ssm" >> ansible.cfg
+            
             # 作成された設定ファイルを確認
             cat ansible.cfg
       - run:
@@ -193,7 +184,9 @@ jobs:
       - run:
           name: Run Ansible Playbook # Ansibleプレイブックを実行
           command: |
-            ansible-playbook -i myrole/tests/inventory playbook.yml
+            export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
+            export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
+            ansible-playbook -i myrole/tests/inventory Ansible_lesson.yml -v
 
   delete-cfn-stack: # スタック削除ジョブ
     executor: python  # Pythonを呼び出し
