@@ -130,7 +130,7 @@ jobs:
           name: Create ansible.cfg file
           command: |
             # プロジェクトのルートディレクトリに ansible.cfg を作成
-            cat > ansible.cfg \<< 'EOF'
+            cat > ansible.cfg << 'EOF'
             [defaults]
             collections_paths = ~/.ansible/collections
             connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection
