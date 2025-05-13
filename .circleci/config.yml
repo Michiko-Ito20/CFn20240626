@@ -130,18 +130,16 @@ jobs:
           name: Create ansible.cfg file
           command: |
             # プロジェクトのルートディレクトリに ansible.cfg を作成
-            cat > ansible.cfg << 'EOF'
-            [defaults]
-            collections_paths = ~/.ansible/collections
-            connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection
+            echo "[defaults]" > ansible.cfg
+            echo "collections_paths = ~/.ansible/collections" >> ansible.cfg
+            echo "connection_plugins = ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection" >> ansible.cfg
+            echo "" >> ansible.cfg
+            echo "[inventory]" >> ansible.cfg
+            echo "enable_plugins = aws_ec2" >> ansible.cfg
+            echo "" >> ansible.cfg
+            echo "[connection]" >> ansible.cfg
+            echo "enable_plugins = aws_ssm" >> ansible.cfg
 
-            [inventory]
-            enable_plugins = aws_ec2
-
-            [connection]
-            enable_plugins = aws_ssm
-            EOF
-            
             # 作成された設定ファイルを確認
             cat ansible.cfg
       - run:
