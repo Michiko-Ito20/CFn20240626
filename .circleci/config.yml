@@ -180,12 +180,13 @@ jobs:
               echo "Error: Ansible command failed. Check ansible_ping_result.log for details."
               cat ansible_ping_result.log
               exit 1
-            }
+            };  # セミコロンを追加
+            
             if ! grep -q "SUCCESS" ansible_ping_result.log; then
               echo "Error: Ansible connection test failed. Check ansible_ping_result.log for details."
               cat ansible_ping_result.log
               exit 1
-            }
+            fi
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor: python
