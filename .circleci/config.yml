@@ -50,6 +50,28 @@ commands:
             # ansible-doc -t connection -l | grep amazon.aws.ssm || echo "SSM plugin not found"
             # プラグイン名確認用のコマンド
             ansible-doc -t connection -l | grep -i ssm
+      - run:
+          name: Check available connection plugins
+          command: |
+            # 利用可能な接続プラグインを確認
+            echo "=== Available connection plugins ==="
+            ansible-doc -t connection -l | grep -i ssm
+            
+            # プラグインの実際の場所を確認
+            echo "=== Finding aws_ssm plugin files ==="
+            find ~/.ansible -name "*ssm*.py" | grep -i connection
+            
+            # amazon.aws コレクション内の接続プラグインを確認
+            echo "=== amazon.aws connection plugins ==="
+            ls -la ~/.ansible/collections/ansible_collections/amazon/aws/plugins/connection/ || echo "Directory not found"
+            
+            # ecgalaxy.aws_ssm コレクション内の接続プラグインを確認
+            echo "=== ecgalaxy.aws_ssm connection plugins ==="
+            ls -la ~/.ansible/collections/ansible_collections/ecgalaxy/aws_ssm/plugins/connection/ || echo "Directory not found"
+            
+            # 特定のプラグインの詳細情報を表示
+            echo "=== aws_ssm plugin documentation ==="
+            ansible-doc -t connection aws_ssm || echo "Plugin aws_ssm not found"
   check-python-version:
   # Pythonのバージョンを確認するためのコマンド
     description: "check python version"
@@ -163,7 +185,7 @@ jobs:
               echo "Error: Ansible connection test failed. Check ansible_ping_result.log for details."
               cat ansible_ping_result.log
               exit 1
-            fi
+            }
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor: python
