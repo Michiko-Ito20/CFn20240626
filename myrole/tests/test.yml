@@ -1,6 +1,6 @@
 ---
 - hosts: ec2
-  connection: amazon.aws.ssm  # SSM接続を明示的に指定
+  connection: aws_ssm  # SSM接続を明示的に指定
   gather_facts: no           # 必要に応じて変更
   become: yes
   roles:
