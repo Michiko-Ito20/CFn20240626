@@ -136,7 +136,7 @@ jobs:
           name: Get EC2 Instance ID and Update Inventory  # EC2のインスタンスIDを取得してインベントリを更新
           command: |
             INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            INVENTORY_FILE="myrole/tests/inventory"
+            INVENTORY_FILE="/home/circleci/project/myrole/tests/inventory.ini"
             INSTANCE_ID=$(aws ec2 describe-instances \
               --region ap-northeast-1 \
               --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
@@ -176,7 +176,7 @@ jobs:
       - run:
           name: Test Ansible Connection via SSM # Ansibleの接続テスト（SSM経由）
           command: |
-            ansible ec2 -i myrole/tests/inventory -m ping > ansible_ping_result.log 2>&1 || {
+            ansible ec2 -i /home/circleci/project/myrole/tests/inventory.ini -m ping > ansible_ping_result.log 2>&1 || {
               echo "Error: Ansible command failed. Check ansible_ping_result.log for details."
               cat ansible_ping_result.log
               exit 1
@@ -209,7 +209,7 @@ jobs:
           command: |
             export ANSIBLE_COLLECTIONS_PATH=~/.ansible/collections
             export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
-            ansible-playbook -i myrole/tests/inventory Ansible_lesson.yml -v
+            ansible-playbook -i /home/circleci/project/myrole/tests/inventory.ini Ansible_lesson.yml -v
 
   delete-cfn-stack: # スタック削除ジョブ
     executor: python  # Pythonを呼び出し
