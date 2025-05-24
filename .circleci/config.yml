@@ -146,20 +146,18 @@ jobs:
               echo "Error: EC2 Instance ID could not be retrieved." 
               exit 1
             fi
-            cat <<EOF > $INVENTORY_FILE
-            [ec2]
-            $INSTANCE_ID
-
-            [ec2:vars]
-            ansible_connection=aws_ssm
-            ansible_aws_ssm_region=ap-northeast-1
-            ansible_python_interpreter=/usr/bin/python
-            ansible_aws_ssm_bucket_name=ansible-ssm-bucket-ansible-stack-bucket
-            EOF
+            mkdir -p "$(dirname "$INVENTORY_FILE")"
+            echo "[ec2]" > "$INVENTORY_FILE"
+            echo "$INSTANCE_ID" >> "$INVENTORY_FILE"
+            echo "" >> "$INVENTORY_FILE"
+            echo "[ec2:vars]" >> "$INVENTORY_FILE"
+            echo "ansible_connection=aws_ssm" >> "$INVENTORY_FILE"
+            echo "ansible_aws_ssm_region=ap-northeast-1" >> "$INVENTORY_FILE"
+            echo "ansible_python_interpreter=/usr/bin/python" >> "$INVENTORY_FILE"
+            echo "ansible_aws_ssm_bucket_name=ansible-ssm-bucket-ansible-stack-bucket" >> "$INVENTORY_FILE"
 
             echo "===== inventory.ini 内容 ====="
-            cat $INVENTORY_FILE
-  
+            cat "$INVENTORY_FILE"
       - run:
           name: Create ansible.cfg file
           command: |
