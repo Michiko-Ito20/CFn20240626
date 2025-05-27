@@ -155,6 +155,7 @@ jobs:
             echo "ansible_aws_ssm_region=ap-northeast-1" >> "$INVENTORY_FILE"
             echo "ansible_python_interpreter=/usr/bin/python" >> "$INVENTORY_FILE"
             echo "ansible_aws_ssm_bucket_name=ansible-ssm-bucket-ansible-stack-bucket" >> "$INVENTORY_FILE"
+            echo "ansible_aws_ssm_plugin=ssm" >> "$INVENTORY_FILE"
 
             echo "===== inventory.ini 内容 ====="
             cat "$INVENTORY_FILE"
