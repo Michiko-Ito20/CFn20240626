@@ -173,7 +173,7 @@ jobs:
             aws ssm send-command \
               --document-name "AWS-RunShellScript" \
               --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters "commands=[echo 'Setting up instance for Ansible',yum -y update]" \
+              --parameters '{"commands":["echo \"Setting up instance for Ansible\"","yum -y update"]}' \
               --region ap-northeast-1
       - run:
           name: Run Ansible Playbook using AWS-ApplyAnsiblePlaybooks # AWS Systems ManagerでAnsibleを実行
