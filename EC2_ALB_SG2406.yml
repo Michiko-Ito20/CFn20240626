@@ -145,3 +145,9 @@ Outputs:
     Export:
       Name: lecture10-EC2Instance-id            # 他のスタックで参照可能なエクスポート名
 
+  EC2PublicIP:
+      Description: "Public IP address of the EC2 instance"
+      Value: !GetAtt TestEC2Instance.PublicIp
+      Export:
+        Name: !Sub "${AWS::StackName}-ec2-public-ip"
+
