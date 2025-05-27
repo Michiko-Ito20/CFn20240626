@@ -138,7 +138,7 @@ jobs:
             aws ssm send-command \
               --document-name "AWS-RunShellScript" \
               --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters "commands=[echo 'Hello from SSM Run Command',hostname,whoami]" \
+              --parameters '{"commands":["echo \"Hello from SSM Run Command\"","hostname","whoami"]}' \
               --region ap-northeast-1 \
               --output text
 
