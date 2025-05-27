@@ -1,45 +1,116 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description:                                    #スタックの説明
-  lecture10-CFn-S3
+Description: "Absible_CFn,Create-SSM-S3bBucket"  # スタックの説明
 
-Parameters:                                     #スタックを作成または更新するたびにテンプレートにカスタム値を入力できる
-  TestEC2Instance:
-    Type: String
-
-# S3のRoleで権限を付与
 Resources: 
-  S3AccessRole:                                   #(どういったコンポーネントを作るか記載)AWSリソースにアクセス権限を付与
-    Type: "AWS::IAM::Role"                      #IAMロール
+  # S3バケットの作成
+  AnsibleS3Bucket:
+    Type: AWS::S3::Bucket
     Properties:
-      AssumeRolePolicyDocument:                 #引き受ける役割の説明
-        Version: "2012-10-17"                   #バージョンは固定値
-        Statement:                              #記載する
-          - 
-            Effect: "Allow"                     #効果は許可
-            Principal:                          #主たる
-              Service: ec2.amazonaws.com        #AWSのEC2サービス
-            Action: sts:AssumeRole              #Security Token Serviceのアジュームロールで動く
-      Path: "/"                                 #パスを指定
+      BucketName: !Sub "ansible-ssm-bucket-${AWS::StackName}"  # バケット名を直接指定
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-ansible-bucket"
+        - Key: Purpose
+          Value: "Ansible SSM Configuration"
 
-#アクセス権限の具体的な内容を記述
-  S3AccessPolicies:                               #S3のアクセスポリシー
-    Type: AWS::IAM::Policy                        #ポリシーの記録
+  # S3バケットポリシー
+  AnsibleS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
     Properties:
-      PolicyName: s3access                      #S3アクセス
-      PolicyDocument:          #リソースの名前
-        Version: '2012-10-17'                   #バージョンは固定値
-        Statement:                              #記載する
-          - Effect: Allow                         #効果は許可
-            Action:                               #動作
-              - "s3:ListAllMyBuckets"             #全ての自分のバケットの一覧
-              - "s3:GetBucketLocation"            #バケットの中身をもらい受ける
-            Resource: "*"            #(どういったコンポーネントを作るか記載)AWSS3の CloudFormation スタックを作成するのと同じ AWS リージョンに Amazon S3 バケットを作成
-          - Effect: Allow                         #効果は許可
-            Action: "*"                           #動作。ワイルドカード
+      Bucket: !Ref AnsibleS3Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt S3AccessRole.Arn
+            Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+              - 's3:ListBucket'
+            Resource: 
+              - !Sub "arn:aws:s3:::ansible-ssm-bucket-${AWS::StackName}"  # バケット名を直接指定
+              - !Sub "arn:aws:s3:::ansible-ssm-bucket-${AWS::StackName}/*"  # 直接バケット名を指定
+
+  S3AccessRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "CircleCI-S3-SSM-Role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+
+  S3AccessPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "S3-Ansible-Access"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:ListAllMyBuckets"
+              - "s3:GetBucketLocation"
+            Resource: "*"
+          - Effect: Allow
+            Action: "s3:*"
             Resource:
-              - "arn:aws:s3:::lecture04-426314309004"   #arn:aws:s3:::lecture04-426314309004/に
-              - "arn:aws:s3:::lecture04-426314309004/*" #arn:aws:s3:::lecture04-426314309004/を含む全て
-      Roles:                                    #アタッチするロール
-        - !Ref S3AccessRole                       #S3アクセスを参照
+              - !Sub "arn:aws:s3:::ansible-ssm-bucket-${AWS::StackName}"
+              - !Sub "arn:aws:s3:::ansible-ssm-bucket-${AWS::StackName}/*"
+          # SSM接続に必要な権限を追加
+          - Effect: Allow
+            Action:
+              - "ssm:StartSession"
+              - "ssm:TerminateSession"
+              - "ssm:ResumeSession"
+              - "ssm:DescribeSessions"
+              - "ssm:GetConnectionStatus"
+            Resource: 
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:*"
+      Roles:
+        - !Ref S3AccessRole
+
+  # EC2インスタンスプロファイル（EC2がS3とSSMにアクセスするために必要）
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref S3AccessRole
+      InstanceProfileName: "EC2-SSM-S3-Profile"
+
+Outputs:
+  RoleArn:
+    Description: "IAMロールのARN"
+    Value: !GetAtt S3AccessRole.Arn
+  InstanceProfile:
+    Description: "インスタンスプロファイル名"
+    Value: !Ref EC2InstanceProfile
+  BucketName:
+    Description: "作成したS3バケット名"
+    Value: !Ref AnsibleS3Bucket
+  BucketARN:
+    Description: "S3バケットのARN"
+    Value: !GetAtt AnsibleS3Bucket.Arn
 

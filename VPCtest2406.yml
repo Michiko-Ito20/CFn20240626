@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description:                     #スタックの説明
-  lecture10-CloudFormation-VPC,subnet
+Description: "Absible_CFn,Create-VPC,subnet"          #スタックの説明
 
 # VPC作成
 Resources:
