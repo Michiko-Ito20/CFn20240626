@@ -175,10 +175,15 @@ jobs:
               --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
               --query "Reservations[*].Instances[*].InstanceId" \
               --output text)
-            
-            # プレイブックファイルをS3にアップロード
+
+            # カレントディレクトリの全ファイルをS3にアップロード（再帰的に）
+            echo "Uploading all playbooks and related files to S3..."
+            aws s3 cp . s3://ansible-ssm-bucket-ansible-stack-bucket/playbooks/ --recursive
+
+            # 個別のプレイブックファイルもアップロード（念のため）
+            echo "Uploading main Ansible playbook file..."
             aws s3 cp Ansible_lesson.yml s3://ansible-ssm-bucket-ansible-stack-bucket/playbooks/
-            
+
             # AWS Systems Managerの「AWS-ApplyAnsiblePlaybooks」ドキュメントを使用してAnsibleを実行
             # コマンド送信結果からコマンドIdを取得
             COMMAND_ID=$(aws ssm send-command \
