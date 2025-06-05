@@ -76,7 +76,7 @@ Resources:
             VolumeType: gp2
             DeleteOnTermination: true
             VolumeSize: 10
-      UserData: !Base64 |                         # 起動時に実行するスクリプト
+      UserData: !Base64 |
         #!/bin/bash
         sudo hostnamectl set-hostname TEST-LINUX-INSTANCE
         
@@ -99,8 +99,8 @@ Resources:
         curl -v https://s3.amazonaws.com/
         
         echo "Testing specific S3 bucket connectivity..."
-        # 実際のバケット名に変更してください
-        curl -v https://ansible-stack-bucket.s3.ap-northeast-1.amazonaws.com/
+        # バケット名を修正
+        curl -v https://ansible-ssm-bucket-ansible-stack-bucket.s3.ap-northeast-1.amazonaws.com/
         
         # S3 CLIを使ったテスト
         echo "=== Testing S3 Access with AWS CLI ==="
@@ -118,7 +118,8 @@ Resources:
         
         # 特定のバケットの内容を表示
         echo "Listing target S3 bucket contents..."
-        aws s3 ls s3://ansible-stack-bucket/playbooks/ || echo "Failed to list bucket contents"
+        # バケット名を修正
+        aws s3 ls s3://ansible-ssm-bucket-ansible-stack-bucket/playbooks/ || echo "Failed to list bucket contents"
         
         echo "=== User Data Script Completed ==="
 
