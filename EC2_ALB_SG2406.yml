@@ -15,6 +15,12 @@ Resources:
           CidrIp: 0.0.0.0/0                     # 全てのIPアドレスからの通信を許可
           FromPort: 443                         # HTTPS用ポート（SSM通信に必要）
           ToPort: 443
+      SecurityGroupEgress:                      # アウトバウンドルール（追加）
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0                     # すべての送信先への通信を許可
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ec2-sg
 
   # EC2ロールとインスタンスをつなぐ
   EC2InstanceProfile:                             # IAMロールをEC2インスタンスに渡す
@@ -43,7 +49,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:                          # IAMロールにアタッチするポリシー
         - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" # SSM用のポリシー
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"           # S3アクセス用のポリシー
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"           # S3アクセス用のポリシー（ReadOnlyからFullAccessに変更済み）
 
   TestEC2Instance:  # EC2インスタンス作成
     Type: AWS::EC2::Instance
@@ -143,7 +149,7 @@ Outputs:
   TestEC2Instance:
     Value: !Ref TestEC2Instance                  # EC2インスタンスIDを出力
     Export:
-      Name: lecture10-EC2Instance-id            # 他のスタックで参照可能なエクスポート名
+      Name: !Sub "${AWS::StackName}-ec2-instance-id"  # 一貫性のあるエクスポート名に修正
 
   EC2PublicIP:
       Description: "Public IP address of the EC2 instance"
