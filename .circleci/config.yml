@@ -168,6 +168,34 @@ jobs:
               --parameters '{"commands":["echo \"Setting up instance for Ansible\"","yum -y update"]}' \
               --region ap-northeast-1
       - run:
+          name: Verify SSM Agent Status # SSM Agentの状態を確認
+          command: |
+            INSTANCE_ID=$(aws ec2 describe-instances \
+              --region ap-northeast-1 \
+              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
+              --query "Reservations[*].Instances[*].InstanceId" \
+              --output text)
+            
+            # SSM Agentの状態を確認
+            echo "Checking SSM Agent status for instance $INSTANCE_ID..."
+            aws ssm describe-instance-information \
+              --region ap-northeast-1 \
+              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+              --query "InstanceInformationList[*].{InstanceId:InstanceId,PingStatus:PingStatus,LastPingDateTime:LastPingDateTime,AgentVersion:AgentVersion}" \
+              --output table
+            
+            # エージェントがオンラインであることを確認
+            PING_STATUS=$(aws ssm describe-instance-information \
+              --region ap-northeast-1 \
+              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+              --query "InstanceInformationList[0].PingStatus" \
+              --output text)
+            
+            if [ "$PING_STATUS" != "Online" ]; then
+              echo "Error: SSM Agent is not online (status: $PING_STATUS). Cannot proceed with Ansible execution."
+              exit 1
+            fi
+      - run:
           name: Run Ansible Playbook using AWS-ApplyAnsiblePlaybooks # AWS Systems ManagerでAnsibleを実行
           command: |
             INSTANCE_ID=$(aws ec2 describe-instances \
