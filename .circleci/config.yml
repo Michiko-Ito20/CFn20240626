@@ -213,7 +213,7 @@ jobs:
               --document-name "AWS-ApplyAnsiblePlaybooks" \
               --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
               --timeout-seconds 900 \
-              --parameters '{"SourceType":["S3"],"SourceInfo":["{\"path\":\"https://ansible-stack-bucket.s3.ap-northeast-1.amazonaws.com/playbooks/Ansible_lesson.yml\"}"],"InstallDependencies":["True"],"PlaybookFile":["Ansible_lesson.yml"],"ExtraVariables":["SSM=True"],"Check":["False"],"Verbose":["-v"]}' \
+              --parameters '{"SourceType":["S3"],"SourceInfo":["{\"path\":\"https://ansible-ssm-bucket-ansible-stack-bucket.s3.ap-northeast-1.amazonaws.com/playbooks/Ansible_lesson.yml\"}"],"InstallDependencies":["True"],"PlaybookFile":["Ansible_lesson.yml"],"ExtraVariables":["SSM=True"],"Check":["False"],"Verbose":["-v"]}' \
               --region ap-northeast-1 \
               --query "Command.CommandId" \
               --output text)
