@@ -69,6 +69,12 @@ jobs:
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
       - run:
+          name: Wait for S3 Bucket Stack Creation
+          command: |
+            aws cloudformation wait stack-create-complete \
+              --stack-name ansible-stack-bucket \
+              --region ap-northeast-1
+      - run:
           name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
           command: |
             INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
