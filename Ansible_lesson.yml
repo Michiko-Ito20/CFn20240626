@@ -1,4 +1,4 @@
----
+# ---
 # - name: Configure Git and Nginx using roles
 #   hosts: all
 #   become: yes
