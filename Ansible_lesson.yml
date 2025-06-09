@@ -1,17 +1,21 @@
----
-- name: Configure Git and Nginx using roles
-  hosts: ec2
-  become: yes
-  connection: aws_ssm   # aws_ssm を使用（ecgalaxy.aws_ssm でも使用可）
-  gather_facts: no      # 必要に応じて変更
-  vars:
-    ansible_aws_ssm_region: "ap-northeast-1"  # 東京リージョン
-    ansible_python_interpreter: "/usr/bin/python"  # Pythonインタプリタパス
-    # S3バケット名が確認できたので有効化
-    ansible_aws_ssm_bucket_name: "ansible-ssm-bucket-ansible-stack-bucket"
-    ansible_aws_ssm_timeout: 60  # タイムアウト値も設定
+# ---
+# - name: Configure Git and Nginx using roles
+#   hosts: all
+#   become: yes
+#   gather_facts: yes  # ファクト収集を有効化
+#   vars:
+#     ansible_python_interpreter: "/usr/bin/python3"  # Python 3 を使用
+#   roles:
+#     - role: myrole/git
+#     - role: myrole/nginx
 
-  roles:
-    - role: myrole/git
-    - role: myrole/nginx
+---
+- name: Dummy Test
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Echo Hello
+      debug:
+        msg: "Hello from Ansible via SSM"
+
 

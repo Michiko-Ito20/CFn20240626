@@ -8,6 +8,8 @@ Resources:
     Type: AWS::EC2::VPC           #VPC作成するタイプを指定
     Properties:                   #スタック起動時にテンプレート渡す値
       CidrBlock: 10.0.0.0/16      #CidrBlockを指定
+      EnableDnsSupport: true       # ← 追加
+      EnableDnsHostnames: true       # ← 追加
       Tags:                       #タグの指定、Key、Valueの順に記載する
         - Key: Name
           Value: lecture10-VPC

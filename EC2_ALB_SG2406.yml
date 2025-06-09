@@ -15,6 +15,12 @@ Resources:
           CidrIp: 0.0.0.0/0                     # 全てのIPアドレスからの通信を許可
           FromPort: 443                         # HTTPS用ポート（SSM通信に必要）
           ToPort: 443
+      SecurityGroupEgress:                      # アウトバウンドルール（追加）
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0                     # すべての送信先への通信を許可
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ec2-sg
 
   # EC2ロールとインスタンスをつなぐ
   EC2InstanceProfile:                             # IAMロールをEC2インスタンスに渡す
@@ -43,7 +49,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:                          # IAMロールにアタッチするポリシー
         - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" # SSM用のポリシー
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"           # S3アクセス用のポリシー
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"           # S3アクセス用のポリシー（ReadOnlyからFullAccessに変更済み）
 
   TestEC2Instance:  # EC2インスタンス作成
     Type: AWS::EC2::Instance
@@ -70,13 +76,52 @@ Resources:
             VolumeType: gp2
             DeleteOnTermination: true
             VolumeSize: 10
-      UserData: !Base64 |                         # 起動時に実行するスクリプト
+      UserData: !Base64 |
         #!/bin/bash
         sudo hostnamectl set-hostname TEST-LINUX-INSTANCE
-        # SSM Agentが最新であることを確認
+        
+        # ログ出力設定
+        exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+        echo "=== Starting User Data Script ==="
+        
+        # SSM Agentの更新
+        echo "=== Installing/Updating SSM Agent ==="
         sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
         sudo systemctl enable amazon-ssm-agent
         sudo systemctl start amazon-ssm-agent
+        
+        # S3接続テスト
+        echo "=== Testing S3 Connectivity ==="
+        echo "Testing general internet connectivity..."
+        curl -v https://aws.amazon.com/
+        
+        echo "Testing S3 connectivity..."
+        curl -v https://s3.amazonaws.com/
+        
+        echo "Testing specific S3 bucket connectivity..."
+        # バケット名を修正
+        curl -v https://ansible-ssm-bucket-ansible-stack-bucket.s3.ap-northeast-1.amazonaws.com/
+        
+        # S3 CLIを使ったテスト
+        echo "=== Testing S3 Access with AWS CLI ==="
+        # AWS CLIがインストールされていることを確認
+        if ! command -v aws &> /dev/null; then
+          echo "Installing AWS CLI..."
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+        fi
+        
+        # S3バケットのリスト表示
+        echo "Listing S3 buckets..."
+        aws s3 ls
+        
+        # 特定のバケットの内容を表示
+        echo "Listing target S3 bucket contents..."
+        # バケット名を修正
+        aws s3 ls s3://ansible-ssm-bucket-ansible-stack-bucket/playbooks/ || echo "Failed to list bucket contents"
+        
+        echo "=== User Data Script Completed ==="
 
   # ALBセキュリティグループ
   ALBSecurityGroup:
@@ -143,5 +188,11 @@ Outputs:
   TestEC2Instance:
     Value: !Ref TestEC2Instance                  # EC2インスタンスIDを出力
     Export:
-      Name: lecture10-EC2Instance-id            # 他のスタックで参照可能なエクスポート名
+      Name: !Sub "${AWS::StackName}-ec2-instance-id"  # 一貫性のあるエクスポート名に修正
+
+  EC2PublicIP:
+      Description: "Public IP address of the EC2 instance"
+      Value: !GetAtt TestEC2Instance.PublicIp
+      Export:
+        Name: !Sub "${AWS::StackName}-ec2-public-ip"
 
