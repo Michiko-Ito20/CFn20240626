@@ -243,7 +243,4 @@ workflows:
       - ansible-playbook:
           requires:
             - setup-environment
-      - delete-cfn-stack:
-          requires:
-            - ansible-playbook
 
