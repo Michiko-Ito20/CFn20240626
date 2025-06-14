@@ -40,6 +40,17 @@ commands:
             python --version  
 
 jobs:
+  cfn-lint:
+    executor: python
+    steps:
+      - checkout
+      - install aws-cli  # AWS CLIをインストール
+      - run: pip install cfn-lint
+      - run:
+          name: run cfn-lint
+          command: |
+            cfn-lint -i W3002 -t cfn/*/*.yml
+
   setup-environment:
     executor: python
     steps:
