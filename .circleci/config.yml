@@ -58,13 +58,6 @@ jobs:
       - check-python-version # Pythonのバージョンを確認
       - install-dependencies  # commandsを呼び出し
       - run:
-          name: Verify Ansible and AnsiblePlaybook Installation # AnsibleとAnsiblePlaybookのインストール確認
-          command: |
-            which ansible
-            ansible --version
-            which ansible-playbook
-            ansible-playbook --version
-      - run:
           name: Create CloudFormation Stack for VPC # VPCスタックを作成
           command: |
             aws cloudformation deploy \
