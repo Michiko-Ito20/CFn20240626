@@ -21,6 +21,15 @@ commands:
             pip install ansible-core>=2.13.9  # これを優先
             pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm  # 必要なバージョンを指定
 
+  install-aws-cli:
+    description: "Install AWS CLI"
+    steps:
+      - run:
+          name: Install AWS CLI
+          command: |
+            sudo apt update
+            sudo apt install -y awscli
+
   check-python-version:
     # Pythonのバージョンを確認するためのコマンド
     description: "check python version"
@@ -335,11 +344,7 @@ jobs:
     executor: python  # Pythonを呼び出し
     steps:
       - checkout  # リポジトリをチェックアウト
-      - run:
-          name: Install AWS CLI
-          command: |
-            sudo apt update
-            sudo apt install -y awscli
+      - install-aws-cli  # AWS CLIをインストール
       # - run:
       #     name: Delete CloudFormation Stack for S3 #S3スタックを削除
       #     command: |
