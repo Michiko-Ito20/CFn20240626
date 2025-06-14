@@ -84,8 +84,10 @@ jobs:
     executor: python
     steps:
       - checkout
-      - install aws-cli  
-      - run: pip install cfn-lint
+      - install-aws-cli  
+      - run:
+          name: Install cfn-lint
+          command: pip install cfn-lint # pip install も run ステップで明確に
       - run:
           name: run cfn-lint
           command: |
@@ -155,9 +157,7 @@ workflows:
           type: approval
           requires:
             - cfn-lint
-      - setup-environment:
-          requires:
-            - deploy-approve
+      - setup-environment
       - ansible-playbook:
           requires:
             - setup-environment
