@@ -14,12 +14,16 @@ commands:
           command: |  
             # APTでインストール可能なパッケージをインストール
             sudo apt update 
-            sudo apt install -y awscli python3-boto3 python3-botocore
-            
+            # sudo apt install -y awscli python3-boto3 python3-botocore
+
+            sudo apt-get install -y software-properties-common
+            sudo apt-add-repository --yes --update ppa:ansible/ansible
+            sudo apt-get install -y ansible
+
             # 必要に応じてpipで追加の依存関係をインストール
-            pip install --upgrade pip  
-            pip install ansible-core>=2.13.9  # これを優先
-            pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm  # 必要なバージョンを指定
+            # pip install --upgrade pip  
+            # pip install ansible-core>=2.13.9  # これを優先
+            # pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm  # 必要なバージョンを指定
 
   install-aws-cli:
     description: "Install AWS CLI"
@@ -118,77 +122,15 @@ jobs:
               --stack-name ansible-stack-bucket \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
-          command: |
-            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            INVENTORY_FILE="/home/circleci/project/myrole/tests/inventory.ini"
-            
-            # EC2のインスタンス情報を取得
-            INSTANCE_INFO=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
-              --query "Reservations[*].Instances[*].[InstanceId,PublicIpAddress]" \
-              --output text)
-              
-            INSTANCE_ID=$(echo "$INSTANCE_INFO" | awk '{print $1}')
-            PUBLIC_IP=$(echo "$INSTANCE_INFO" | awk '{print $2}')
-            
-            if [ -z "$INSTANCE_ID" ] || [ -z "$PUBLIC_IP" ]; then  
-              echo "Error: EC2 Instance ID or Public IP could not be retrieved." 
-              exit 1
-            fi
-            
-            # インベントリファイルを作成
-            mkdir -p "$(dirname "$INVENTORY_FILE")"
-            echo "[ec2]" > "$INVENTORY_FILE"
-            echo "$PUBLIC_IP" >> "$INVENTORY_FILE"
-            echo "" >> "$INVENTORY_FILE"
-            echo "[ec2:vars]" >> "$INVENTORY_FILE"
-            echo "ansible_user=ec2-user" >> "$INVENTORY_FILE"
-            echo "ansible_python_interpreter=/usr/bin/python3" >> "$INVENTORY_FILE"
-            # SSHを使用するが、パスワードなしで接続できるようにする
-            echo "ansible_connection=ssh" >> "$INVENTORY_FILE"
-            # SSHの厳密なホストキーチェックを無効化
-            echo "ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> "$INVENTORY_FILE"
-            # AWS RunCommandを使用して接続するための設定（必要に応じて）
-            echo "ansible_ssh_extra_args='ssm start-session --target $INSTANCE_ID --document-name AWS-StartInteractiveCommand --parameters command=\"bash -l\"'" >> "$INVENTORY_FILE"
-
-            echo "===== inventory.ini 内容 ====="
-            cat "$INVENTORY_FILE"
-      - run:
-          name: Test AWS Run Command to EC2 Instance # AWS Run Commandでの接続テスト
-          command: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-            
-            # AWS SSM Run Commandを使用してインスタンスにコマンドを実行
-            aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters '{"commands":["echo \"Hello from SSM Run Command\"","hostname","whoami"]}' \
-              --region ap-northeast-1 \
-              --output text
-      - run:
-          name: Set up SSM SSH Proxy
-          command: |
-            mkdir -p ~/.ssh
-            echo "Host i-* mi-*
-              ProxyCommand sh -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'\"" > ~/.ssh/config
-            chmod 600 ~/.ssh/config
-            
-            # 確認用
-            echo "=== SSH Config Content ==="
-            cat ~/.ssh/config
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor: python
     steps:
       - checkout
       - install-dependencies  # 再度commandsでインストール
+      - install-aws-cli  # 再度AWS CLIをインストール
+      - get-public-ip  # EC2のパブリックIPを取得
+      - setup-ssh-config  # SSH設定を行う
       - run:
           name: Verify Ansible Installation # Ansibleのインストール確認
           command: |
@@ -197,26 +139,12 @@ jobs:
             which ansible-playbook
             ansible-playbook --version
       - run:
-          name: Get EC2 Instance ID for AWS Systems Manager # EC2インスタンスIDを取得
+          name: run ansible
           command: |
-            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-            
-            if [ -z "$INSTANCE_ID" ]; then  
-              echo "Error: EC2 Instance ID could not be retrieved." 
-              exit 1
-            fi
-            
-            # SSMを使ってコマンドを実行する（テスト用）
-            aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters '{"commands":["echo \"Setting up instance for Ansible\"","yum -y update"]}' \
-              --region ap-northeast-1
+            cd ansible
+            echo raisetech202210-ec2 >> production_inventory
+            ansible-playbook -i production_inventory production_playbook.yml
+ 
 
       # GitとNginxのインストール確認ステップ
       - run:
@@ -264,6 +192,7 @@ jobs:
 workflows:
   default:
     jobs:
+      - cfn-lint
       - setup-environment
       - ansible-playbook:
           requires:
