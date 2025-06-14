@@ -132,62 +132,20 @@ jobs:
       - get-public-ip  # EC2のパブリックIPを取得
       - setup-ssh-config  # SSH設定を行う
       - run:
-          name: Verify Ansible Installation # Ansibleのインストール確認
+          name: install galaxy role rvm
           command: |
-            which ansible
-            ansible --version
-            which ansible-playbook
-            ansible-playbook --version
+            ansible-galaxy install rvm.ruby --roles-path ansible/roles
       - run:
           name: run ansible
           command: |
             cd ansible
-            echo raisetech202210-ec2 >> production_inventory
+            echo AnsibleStackEC2-ALB-SG-ec2-instance >> production_inventory
+
+            echo "--- Inventory File (production_inventory) ---"
+            cat production_inventory
+            echo "---------------------------------------------"
+
             ansible-playbook -i production_inventory production_playbook.yml
- 
-
-      # GitとNginxのインストール確認ステップ
-      - run:
-          name: Verify Git and Nginx Installation on EC2 via SSM # GitとNginxのインストール確認
-          command: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-
-            # GitとNginxのバージョン確認コマンドを実行
-            # 改善: コマンドIDを直接取得する方法に変更
-            COMMAND_ID=$(aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters '{"commands":["git --version","nginx -v"]}' \
-              --region ap-northeast-1 \
-              --comment "Verify Git and Nginx installation" \
-              --query "Command.CommandId" \
-              --output text)
-            
-            echo "Started verification command with ID: $COMMAND_ID"
-
-            # コマンドが完了するまで待機
-            echo "Waiting for verification to complete..."
-            aws ssm wait command-executed \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --region ap-northeast-1
-
-            echo "Command Output:"
-            # 改善: 出力形式を明示的に指定
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --region ap-northeast-1 \
-              --query "StandardOutputContent" \
-              --output text
-      - run:
-          name: Run Ansible Playbook Directly via SSM SSH
-          command: |
-            ansible-playbook myrole/tests/Ansible_lesson.yml -i myrole/tests/inventory.ini
 
 workflows:
   default:
