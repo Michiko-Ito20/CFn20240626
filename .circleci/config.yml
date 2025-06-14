@@ -116,22 +116,6 @@ jobs:
             echo "===== inventory.ini 内容 ====="
             cat "$INVENTORY_FILE"
       - run:
-          name: Create ansible.cfg file
-          command: |
-            # ansible.cfg ファイルを作成
-            echo "[defaults]" > ansible.cfg
-            echo "host_key_checking = False" >> ansible.cfg
-            echo "inventory = /home/circleci/project/myrole/tests/inventory.ini" >> ansible.cfg
-            echo "remote_user = ec2-user" >> ansible.cfg
-            echo "timeout = 30" >> ansible.cfg
-            
-            echo "[ssh_connection]" >> ansible.cfg
-            echo "pipelining = True" >> ansible.cfg
-            echo "control_path = /tmp/ansible-ssh-%%h-%%p-%%r" >> ansible.cfg
-            
-            # 作成された設定ファイルを確認
-            cat ansible.cfg
-      - run:
           name: Test AWS Run Command to EC2 Instance # AWS Run Commandでの接続テスト
           command: |
             INSTANCE_ID=$(aws ec2 describe-instances \
