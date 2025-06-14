@@ -30,6 +30,14 @@ commands:
             sudo apt update
             sudo apt install -y awscli
 
+  get-public-ip:
+    steps:
+      - run:
+          name: get public ip
+          command: |
+            EC2_PUBLIC_IP=$(aws ec2 describe-instances --filter "Name=tag:Name,Values=raisetech202210-cfn-ec2" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
+            echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
+
   check-python-version:
     # Pythonのバージョンを確認するためのコマンド
     description: "check python version"
