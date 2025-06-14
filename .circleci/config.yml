@@ -35,8 +35,36 @@ commands:
       - run:
           name: get public ip
           command: |
-            EC2_PUBLIC_IP=$(aws ec2 describe-instances --filter "Name=tag:Name,Values=raisetech202210-cfn-ec2" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
+            # 新しいEC2インスタンス名を使用
+            EC2_PUBLIC_IP=$(aws ec2 describe-instances --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
             echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
+  setup-ssh-config:
+    steps:
+      - run:
+          name: create ssh-config
+          command: |
+            # EC2_PUBLIC_IP=$(aws ec2 describe-instances --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
+            cat \<< EOF > ~/.ssh/config
+            Host AnsibleStackEC2-ALB-SG-ec2-instance
+              HostName ${EC2_PUBLIC_IP}
+              IdentityFile ~/.ssh/ansible_stack_ec2_key.pem
+              User ec2-user
+              IdentitiesOnly yes
+            Host *
+              AddKeysToAgent yes
+              CheckHostIP no
+              StrictHostKeyChecking no
+              UserKnownHostsFile=/dev/null
+            EOF
+            cat ~/.ssh/config
+      - run:
+          name: add ssh key from aws parameter store
+          command: |
+            mkdir -p ~/.ssh
+            KeyPairID=$(aws ec2 describe-key-pairs --key-names "AnsibleStackEC2-ALB-SG-keypair" --query 'KeyPairs[].KeyPairId' --output text)
+            echo "$(aws ssm get-parameter --name /ec2/keypair/${KeyPairID} --with-decryption --query Parameter.Value --output text)" > ~/.ssh/ansible_stack_ec2_key.pem
+            #sed -i -e 's/"//g' ~/.ssh/ansible_stack_ec2_key.pem
+            chmod 400 ~/.ssh/ansible_stack_ec2_key.pem
 
   check-python-version:
     # Pythonのバージョンを確認するためのコマンド
@@ -52,7 +80,7 @@ jobs:
     executor: python
     steps:
       - checkout
-      - install aws-cli  # AWS CLIをインストール
+      - install aws-cli  
       - run: pip install cfn-lint
       - run:
           name: run cfn-lint
@@ -65,6 +93,7 @@ jobs:
       - checkout  # リポジトリをチェックアウト
       - check-python-version # Pythonのバージョンを確認
       - install-dependencies  # commandsを呼び出し
+      - install-aws-cli  # AWS CLIをインストール
       - run:
           name: Create CloudFormation Stack for VPC # VPCスタックを作成
           command: |
