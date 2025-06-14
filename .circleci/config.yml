@@ -151,7 +151,13 @@ workflows:
   default:
     jobs:
       - cfn-lint
-      - setup-environment
+      - deploy-approve: # 手動承認ジョブ
+          type: approval
+          requires:
+            - cfn-lint
+      - setup-environment:
+          requires:
+            - deploy-approve
       - ansible-playbook:
           requires:
             - setup-environment
