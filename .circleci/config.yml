@@ -45,7 +45,7 @@ jobs:
     steps:
       - checkout  # リポジトリをチェックアウト
       - check-python-version # Pythonのバージョンを確認
-      - install-dependencies  # ここでcommandsを呼び出し
+      - install-dependencies  # commandsを呼び出し
       - run:
           name: Verify Ansible and AnsiblePlaybook Installation # AnsibleとAnsiblePlaybookのインストール確認
           command: |
