@@ -301,45 +301,6 @@ jobs:
           name: Run Ansible Playbook Directly via SSM SSH
           command: |
             ansible-playbook myrole/tests/Ansible_lesson.yml -i myrole/tests/inventory.ini
-      # - run:
-      #     name: Run Ansible Playbook using AWS-ApplyAnsiblePlaybooks # AWS Systems ManagerでAnsibleを実行
-      #     command: |
-            # ...既存のコード...
-      - run:
-          name: Run Ansible Playbook via SSM Proxy SSH
-          command: |
-            # 必要なパッケージがインストールされていることを確認
-            sudo apt-get update
-            sudo apt-get install -y openssh-client
-            
-            # AWS SSM プラグインがインストールされていることを確認
-            if [ ! -f /usr/local/bin/session-manager-plugin ]; then
-              echo "Installing AWS Session Manager Plugin..."
-              curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
-              sudo dpkg -i session-manager-plugin.deb
-              sudo ln -s /usr/local/sessionmanagerplugin/bin/session-manager-plugin /usr/local/bin/session-manager-plugin
-            fi
-            
-            # インベントリの確認
-            echo "Using inventory:"
-            cat myrole/tests/inventory.ini
-            
-            # SSH設定の確認
-            echo "Using SSH config:"
-            cat ~/.ssh/config
-            
-            # ansible.cfgの確認
-            echo "Using ansible.cfg:"
-            cat ansible.cfg
-            
-            # 接続テスト
-            echo "Testing connection with ansible ping module..."
-            ANSIBLE_DEBUG=1 ansible ec2 -i myrole/tests/inventory.ini -m ping -v
-            
-            # プレイブックの実行
-            echo "Running ansible playbook..."
-            ANSIBLE_DEBUG=1 ansible-playbook myrole/tests/Ansible_lesson.yml -i myrole/tests/inventory.ini -v
-          no_output_timeout: 30m
 
 workflows:
   default:
