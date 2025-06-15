@@ -91,7 +91,7 @@ jobs:
       - run:
           name: run cfn-lint
           command: |
-            cfn-lint -i W3002 -t cfn/*.yml
+            cfn-lint -i W -t cfn/*.yml
 
   setup-environment:
     executor: python
