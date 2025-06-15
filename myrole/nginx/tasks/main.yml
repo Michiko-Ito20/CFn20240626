@@ -2,14 +2,14 @@
 # myrole/nginx/tasks/main.yml
 
 # Nginxをインストール
-- name: Install Nginx
+- name: Install Nginx using Amazon Linux Extras
   ansible.builtin.shell:
     cmd: |
-      sudo yum update -y && sudo yum install -y nginx
-  register: yum_result
+      sudo amazon-linux-extras enable nginx1 && sudo amazon-linux-extras install -y nginx
+  register: nginx_result
   retries: 5  # 最大5回リトライ
   delay: 60   # 各リトライ間に60秒待機
-  until: yum_result.rc == 0  # コマンドが成功するまで再試行
+  until: nginx_result.rc == 0  # コマンドが成功するまで再試行
 
 # Nginxを起動して有効化
 - name: Start and enable Nginx
