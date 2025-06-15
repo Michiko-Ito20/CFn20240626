@@ -160,7 +160,7 @@ workflows:
           type: approval
           requires:
             - cfn-lint
-      - setup-environment:
+      - setup-cfn:
           requires:
             - deploy-approve
       - ansible-playbook:
