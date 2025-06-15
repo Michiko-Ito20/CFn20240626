@@ -165,5 +165,5 @@ workflows:
             - deploy-approve
       - ansible-playbook:
           requires:
-            - setup-environment
+            - setup-cfn
 
