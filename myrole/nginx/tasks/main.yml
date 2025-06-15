@@ -5,7 +5,7 @@
 - name: Install Nginx
   ansible.builtin.shell:
     cmd: |
-      sudo apt update && sudo apt install -y nginx
+      sudo yum update -y && sudo yum install -y nginx
 
 # Nginxを起動して有効化
 - name: Start and enable Nginx
