@@ -144,9 +144,8 @@ jobs:
       - run:
           name: run ansible
           command: |
-            cd ansible
-            echo AnsibleStackEC2-ALB-SG-ec2-instance >> inventory.ini
-            ansible-playbook -i myrole\tests\inventory.ini Ansible_lesson.yml
+            echo AnsibleStackEC2-ALB-SG-ec2-instance >> myrole/tests/inventory.ini
+            ansible-playbook -i myrole/tests/inventory.ini ../Ansible_lesson.yml
 
 workflows:
   default:
