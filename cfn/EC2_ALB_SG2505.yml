@@ -76,6 +76,11 @@ Resources:
             VolumeType: gp2
             DeleteOnTermination: true
             VolumeSize: 10
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          sudo rm -f /var/run/yum.pid
+
 
   MyKeyPair:
     Type: AWS::EC2::KeyPair
