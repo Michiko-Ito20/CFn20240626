@@ -8,7 +8,7 @@
       sudo yum update -y && sudo yum install -y nginx
   register: yum_result
   retries: 5  # 最大5回リトライ
-  delay: 10   # 各リトライ間に10秒待機
+  delay: 60   # 各リトライ間に60秒待機
   until: yum_result.rc == 0  # コマンドが成功するまで再試行
 
 # Nginxを起動して有効化
