@@ -77,6 +77,15 @@ Resources:
             DeleteOnTermination: true
             VolumeSize: 10
 
+  MyKeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: cfn-Ansible-lesson-keypair  # キーペアの名前
+      KeyType: rsa
+      Tags:
+        - Key: Name
+          Value: cfn-Ansible-lesson-keypair
+
   # ALBセキュリティグループ
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
