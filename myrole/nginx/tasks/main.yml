@@ -5,7 +5,7 @@
 - name: Install Nginx using Amazon Linux Extras
   ansible.builtin.shell:
     cmd: |
-      sudo amazon-linux-extras enable nginx1 && sudo amazon-linux-extras install -y nginx
+      sudo amazon-linux-extras enable nginx1 && sudo amazon-linux-extras install -y nginx1
   register: nginx_result
   retries: 5  # 最大5回リトライ
   delay: 60   # 各リトライ間に60秒待機
