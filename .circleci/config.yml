@@ -50,7 +50,8 @@ commands:
       - run:
           name: create ssh-config
           command: |
-            # EC2_PUBLIC_IP=$(aws ec2 describe-instances --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
+            mkdir -p ~/.ssh
+            # EC2_PUBLIC_IP=$(aws ec2 describe-instances --region ap-northeast-1 --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
             cat \<< EOF > ~/.ssh/config
             Host AnsibleStackEC2-ALB-SG-ec2-instance
               HostName ${EC2_PUBLIC_IP}
@@ -68,8 +69,8 @@ commands:
           name: add ssh key from aws parameter store
           command: |
             mkdir -p ~/.ssh
-            KeyPairID=$(aws ec2 describe-key-pairs --key-names "AnsibleStackEC2-ALB-SG-keypair" --query 'KeyPairs[].KeyPairId' --output text)
-            echo "$(aws ssm get-parameter --name /ec2/keypair/${KeyPairID} --with-decryption --query Parameter.Value --output text)" > ~/.ssh/ansible_stack_ec2_key.pem
+            KeyPairID=$(aws ec2 describe-key-pairs --region ap-northeast-1 --key-names "AnsibleStackEC2-ALB-SG-keypair" --query 'KeyPairs[].KeyPairId' --output text)
+            echo "$(aws ssm get-parameter --region ap-northeast-1 --name /ec2/keypair/${KeyPairID} --with-decryption --query Parameter.Value --output text)" > ~/.ssh/ansible_stack_ec2_key.pem
             #sed -i -e 's/"//g' ~/.ssh/ansible_stack_ec2_key.pem
             chmod 400 ~/.ssh/ansible_stack_ec2_key.pem
 
