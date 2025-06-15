@@ -39,8 +39,11 @@ commands:
       - run:
           name: get public ip
           command: |
-            # 新しいEC2インスタンス名を使用
-            EC2_PUBLIC_IP=$(aws ec2 describe-instances --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
+            EC2_PUBLIC_IP=$(aws ec2 describe-instances \
+              --region ap-northeast-1 \
+              --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
+              --query 'Reservations[].Instances[].PublicIpAddress|[0]' \
+              --output text)
             echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
   setup-ssh-config:
     steps:
