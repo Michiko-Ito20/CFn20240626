@@ -145,7 +145,12 @@ jobs:
           name: run ansible
           command: |
             echo AnsibleStackEC2-ALB-SG-ec2-instance >> myrole/tests/inventory.ini
-            ansible-playbook -i myrole/tests/inventory.ini ../Ansible_lesson.yml
+            ansible-playbook -i myrole/tests/inventory.ini ./Ansible_lesson.yml
+      - run:
+          name: Verify files exist
+          command: |
+            ls -l ./Ansible_lesson.yml
+            ls -l myrole/tests/inventory.ini
 
 workflows:
   default:
