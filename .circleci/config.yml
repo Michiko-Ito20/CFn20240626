@@ -91,7 +91,7 @@ jobs:
       - run:
           name: run cfn-lint
           command: |
-            cfn-lint -i W3002 -t cfn/*/*.yml
+            cfn-lint -i W3002 -t cfn/*.yml
 
   setup-environment:
     executor: python
@@ -104,7 +104,7 @@ jobs:
           name: Create CloudFormation Stack for VPC # VPCスタックを作成
           command: |
             aws cloudformation deploy \
-              --template-file VPCtest2406.yml \
+              --template-file cfn/VPC2505.yml \  # パスを修正
               --stack-name AnsibleStackVPC \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM 
@@ -112,7 +112,7 @@ jobs:
           name: Create CloudFormation Stack for EC2-ALB-SG  # EC2-ALB-SGスタックを作成
           command: |
             aws cloudformation deploy \
-              --template-file EC2_ALB_SG2406.yml \
+              --template-file cfn/EC2_ALB_SG2505.yml \  # パスを修正
               --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
@@ -120,8 +120,8 @@ jobs:
           name: Create CloudFormation Stack for S3 # S3スタックを作成
           command: |
             aws cloudformation deploy \
-              --template-file S3test2406.yml \
-              --stack-name ansible-stack-bucket \
+              --template-file cfn/S32505.yml \  # パスを修正
+              --stack-name Ansible-stack-bucket \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
 
