@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "Absible_CFn,Create-S3Bucket"  # スタックの説明
+Description: "Ansible_CFn,Create-S3Bucket"  # スペルミスを修正
 
 Resources: 
   # S3バケットの作成
   AnsibleS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "ansible-bucket-${AWS::AccountId}"  # バケット名を直接指定
+      BucketName: !Sub "ansible-bucket-${AWS::AccountId}-${AWS::StackName}"
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -42,8 +42,8 @@ Resources:
               - 's3:PutObject'
               - 's3:ListBucket'
             Resource: 
-              - !Sub "arn:aws:s3:::ansible-bucket-${AWS::AccountId}"  # バケット名を直接指定
-              - !Sub "arn:aws:s3:::ansible-bucket-${AWS::AccountId}/*"  # 直接バケット名を指定
+              - !GetAtt AnsibleS3Bucket.Arn
+              - !Sub "${AnsibleS3Bucket.Arn}/*"
 
   S3AccessRole:
     Type: "AWS::IAM::Role"
@@ -57,8 +57,6 @@ Resources:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
       Path: "/"
-      # ManagedPolicyArns:
-      #   - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 
   S3AccessPolicies:
     Type: AWS::IAM::Policy
@@ -75,23 +73,12 @@ Resources:
           - Effect: Allow
             Action: "s3:*"
             Resource:
-              - !Sub "arn:aws:s3:::ansible-bucket-${AWS::AccountId}"
-              - !Sub "arn:aws:s3:::ansible-bucket-${AWS::AccountId}/*"
-          # # SSM接続に必要な権限を追加
-          # - Effect: Allow
-          #   Action:
-          #     - "ssm:StartSession"
-          #     - "ssm:TerminateSession"
-          #     - "ssm:ResumeSession"
-          #     - "ssm:DescribeSessions"
-          #     - "ssm:GetConnectionStatus"
-      #       Resource: 
-      #         - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
-      #         - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:*"
-      # Roles:
-      #   - !Ref S3AccessRole
+              - !GetAtt AnsibleS3Bucket.Arn
+              - !Sub "${AnsibleS3Bucket.Arn}/*"
+      Roles:
+        - !Ref S3AccessRole
 
-  # EC2インスタンスプロファイル（EC2がS3とSSMにアクセスするために必要）
+  # EC2インスタンスプロファイル
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
