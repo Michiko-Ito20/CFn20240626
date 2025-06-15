@@ -97,7 +97,7 @@ jobs:
           command: |
             cfn-lint -i W -t cfn/*.yml
 
-  setup-environment:
+  setup-cfn:
     executor: python
     steps:
       - checkout  # リポジトリをチェックアウト
@@ -145,13 +145,12 @@ jobs:
           name: run ansible
           command: |
             cd ansible
-            echo AnsibleStackEC2-ALB-SG-ec2-instance >> production_inventory
 
-            echo "--- Inventory File (production_inventory) ---"
-            cat production_inventory
+            echo "--- Inventory File (inventory.ini) ---"
+            cat C:\Dev\CFn20240626\myrole\tests\inventory.ini
             echo "---------------------------------------------"
 
-            ansible-playbook -i production_inventory production_playbook.yml
+            ansible-playbook -i ansible/myrole/tests/inventory.ini Ansible_lesson.yml
 
 workflows:
   default:
