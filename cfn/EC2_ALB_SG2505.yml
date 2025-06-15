@@ -55,7 +55,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}" # 最新のAmazon Linux 2 AMI
-      KeyName: Ansible_lesson                     # SSHキー（必要に応じて削除可能）
+      KeyName: AnsibleStackEC2-ALB-SG-keypair                     # SSHキー（必要に応じて削除可能）
       InstanceType: t3.micro                      # インスタンスタイプ
       IamInstanceProfile: !Ref EC2InstanceProfile             # IAMインスタンスプロファイルを参照
       InstanceInitiatedShutdownBehavior: stop     # シャットダウン時の動作
@@ -80,11 +80,11 @@ Resources:
   MyKeyPair:
     Type: AWS::EC2::KeyPair
     Properties:
-      KeyName: cfn-Ansible-lesson-keypair  # キーペアの名前
+      KeyName: AnsibleStackEC2-ALB-SG-keypair
       KeyType: rsa
       Tags:
         - Key: Name
-          Value: cfn-Ansible-lesson-keypair
+          Value: AnsibleStackEC2-ALB-SG-keypair
 
   # ALBセキュリティグループ
   ALBSecurityGroup:
