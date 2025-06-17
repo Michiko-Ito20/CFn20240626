@@ -1,21 +1,14 @@
-# ---
-# - name: Configure Git and Nginx using roles
-#   hosts: all
-#   become: yes
-#   gather_facts: yes  # ファクト収集を有効化
-#   vars:
-#     ansible_python_interpreter: "/usr/bin/python3"  # Python 3 を使用
-#   roles:
-#     - role: myrole/git
-#     - role: myrole/nginx
-
 ---
-- name: Dummy Test
-  hosts: localhost
-  connection: local
-  tasks:
-    - name: Echo Hello
-      debug:
-        msg: "Hello from Ansible via SSM"
+- name: Configure Git and Nginx using roles
+  hosts: all
+  become: yes
+  gather_facts: yes  # ファクト収集を有効化
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"  # Python 3 を使用
+  roles:
+    - role: myrole/git
+    - role: myrole/nginx
+
+
 
 

@@ -14,12 +14,65 @@ commands:
           command: |  
             # APTでインストール可能なパッケージをインストール
             sudo apt update 
-            sudo apt install -y awscli python3-boto3 python3-botocore
-            
+            # sudo apt install -y awscli python3-boto3 python3-botocore
+
+            sudo apt-get install -y software-properties-common
+            sudo apt-add-repository --yes --update ppa:ansible/ansible
+            sudo apt-get install -y ansible
+
             # 必要に応じてpipで追加の依存関係をインストール
-            pip install --upgrade pip  
-            pip install ansible-core>=2.13.9  # これを優先
-            pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm  # 必要なバージョンを指定
+            # pip install --upgrade pip  
+            # pip install ansible-core>=2.13.9  # これを優先
+            # pip install boto3>=1.28.0 botocore>=1.31.0 pywinrm  # 必要なバージョンを指定
+
+  install-aws-cli:
+    description: "Install AWS CLI"
+    steps:
+      - run:
+          name: Install AWS CLI
+          command: |
+            sudo apt update
+            sudo apt install -y awscli
+
+  get-public-ip:
+    steps:
+      - run:
+          name: get public ip
+          command: |
+            EC2_PUBLIC_IP=$(aws ec2 describe-instances \
+              --region ap-northeast-1 \
+              --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
+              --query 'Reservations[].Instances[].PublicIpAddress|[0]' \
+              --output text)
+            echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
+  setup-ssh-config:
+    steps:
+      - run:
+          name: create ssh-config
+          command: |
+            mkdir -p ~/.ssh
+            # EC2_PUBLIC_IP=$(aws ec2 describe-instances --region ap-northeast-1 --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" --query 'Reservations[].Instances[].PublicIpAddress|[0]' --output text)
+            cat \<< EOF > ~/.ssh/config
+            Host AnsibleStackEC2-ALB-SG-ec2-instance
+              HostName ${EC2_PUBLIC_IP}
+              IdentityFile ~/.ssh/ansible_stack_ec2_key.pem
+              User ec2-user
+              IdentitiesOnly yes
+            Host *
+              AddKeysToAgent yes
+              CheckHostIP no
+              StrictHostKeyChecking no
+              UserKnownHostsFile=/dev/null
+            EOF
+            cat ~/.ssh/config
+      - run:
+          name: add ssh key from aws parameter store
+          command: |
+            mkdir -p ~/.ssh
+            KeyPairID=$(aws ec2 describe-key-pairs --region ap-northeast-1 --key-names "AnsibleStackEC2-ALB-SG-keypair" --query 'KeyPairs[].KeyPairId' --output text)
+            echo "$(aws ssm get-parameter --region ap-northeast-1 --name /ec2/keypair/${KeyPairID} --with-decryption --query Parameter.Value --output text)" > ~/.ssh/ansible_stack_ec2_key.pem
+            #sed -i -e 's/"//g' ~/.ssh/ansible_stack_ec2_key.pem
+            chmod 400 ~/.ssh/ansible_stack_ec2_key.pem
 
   check-python-version:
     # Pythonのバージョンを確認するためのコマンド
@@ -31,24 +84,31 @@ commands:
             python --version  
 
 jobs:
-  setup-environment:
+  cfn-lint:
+    executor: python
+    steps:
+      - checkout
+      - install-aws-cli  
+      - run:
+          name: Install cfn-lint
+          command: pip install cfn-lint # pip install も run ステップで明確に
+      - run:
+          name: run cfn-lint
+          command: |
+            cfn-lint -i W -t cfn/*.yml
+
+  setup-cfn:
     executor: python
     steps:
       - checkout  # リポジトリをチェックアウト
       - check-python-version # Pythonのバージョンを確認
-      - install-dependencies  # ここでcommandsを呼び出し
-      - run:
-          name: Verify Ansible and AnsiblePlaybook Installation # AnsibleとAnsiblePlaybookのインストール確認
-          command: |
-            which ansible
-            ansible --version
-            which ansible-playbook
-            ansible-playbook --version
+      - install-dependencies  # commandsを呼び出し
+      - install-aws-cli  # AWS CLIをインストール
       - run:
           name: Create CloudFormation Stack for VPC # VPCスタックを作成
           command: |
             aws cloudformation deploy \
-              --template-file VPCtest2406.yml \
+              --template-file cfn/VPC2505.yml \
               --stack-name AnsibleStackVPC \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM 
@@ -56,301 +116,54 @@ jobs:
           name: Create CloudFormation Stack for EC2-ALB-SG  # EC2-ALB-SGスタックを作成
           command: |
             aws cloudformation deploy \
-              --template-file EC2_ALB_SG2406.yml \
+              --template-file cfn/EC2_ALB_SG2505.yml \
               --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Create CloudFormation Stack for S3 # S3スタックを作成
-          command: |
-            aws cloudformation deploy \
-              --template-file S3test2406.yml \
-              --stack-name ansible-stack-bucket \
-              --region ap-northeast-1 \
-              --capabilities CAPABILITY_NAMED_IAM
-      - run:
-          name: Get EC2 Public IP and Update Inventory  # EC2のパブリックIPを取得してインベントリを更新
-          command: |
-            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            INVENTORY_FILE="/home/circleci/project/myrole/tests/inventory.ini"
-            
-            # EC2のインスタンス情報を取得
-            INSTANCE_INFO=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
-              --query "Reservations[*].Instances[*].[InstanceId,PublicIpAddress]" \
-              --output text)
-              
-            INSTANCE_ID=$(echo "$INSTANCE_INFO" | awk '{print $1}')
-            PUBLIC_IP=$(echo "$INSTANCE_INFO" | awk '{print $2}')
-            
-            if [ -z "$INSTANCE_ID" ] || [ -z "$PUBLIC_IP" ]; then  
-              echo "Error: EC2 Instance ID or Public IP could not be retrieved." 
-              exit 1
-            fi
-            
-            # インベントリファイルを作成
-            mkdir -p "$(dirname "$INVENTORY_FILE")"
-            echo "[ec2]" > "$INVENTORY_FILE"
-            echo "$PUBLIC_IP" >> "$INVENTORY_FILE"
-            echo "" >> "$INVENTORY_FILE"
-            echo "[ec2:vars]" >> "$INVENTORY_FILE"
-            echo "ansible_user=ec2-user" >> "$INVENTORY_FILE"
-            echo "ansible_python_interpreter=/usr/bin/python3" >> "$INVENTORY_FILE"
-            # SSHを使用するが、パスワードなしで接続できるようにする
-            echo "ansible_connection=ssh" >> "$INVENTORY_FILE"
-            # SSHの厳密なホストキーチェックを無効化
-            echo "ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> "$INVENTORY_FILE"
-            # AWS RunCommandを使用して接続するための設定（必要に応じて）
-            echo "ansible_ssh_extra_args='ssm start-session --target $INSTANCE_ID --document-name AWS-StartInteractiveCommand --parameters command=\"bash -l\"'" >> "$INVENTORY_FILE"
-
-            echo "===== inventory.ini 内容 ====="
-            cat "$INVENTORY_FILE"
-      - run:
-          name: Create ansible.cfg file
-          command: |
-            # ansible.cfg ファイルを作成
-            echo "[defaults]" > ansible.cfg
-            echo "host_key_checking = False" >> ansible.cfg
-            echo "inventory = /home/circleci/project/myrole/tests/inventory.ini" >> ansible.cfg
-            echo "remote_user = ec2-user" >> ansible.cfg
-            
-            # 作成された設定ファイルを確認
-            cat ansible.cfg
-      - run:
-          name: Test AWS Run Command to EC2 Instance # AWS Run Commandでの接続テスト
-          command: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-            
-            # AWS SSM Run Commandを使用してインスタンスにコマンドを実行
-            aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters '{"commands":["echo \"Hello from SSM Run Command\"","hostname","whoami"]}' \
-              --region ap-northeast-1 \
-              --output text
+      # - run:
+      #     name: Create CloudFormation Stack for S3 # S3スタックを作成
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file cfn/S32505.yml \
+      #         --stack-name Ansible-stack-bucket \
+      #         --region ap-northeast-1 \
+      #         --capabilities CAPABILITY_NAMED_IAM
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor: python
     steps:
       - checkout
       - install-dependencies  # 再度commandsでインストール
+      - install-aws-cli  # 再度AWS CLIをインストール
+      - get-public-ip  # EC2のパブリックIPを取得
+      - setup-ssh-config  # SSH設定を行う
       - run:
-          name: Verify Ansible Installation # Ansibleのインストール確認
+          name: install galaxy role rvm
           command: |
-            which ansible
-            ansible --version
-            which ansible-playbook
-            ansible-playbook --version
+            ansible-galaxy install rvm.ruby --roles-path ansible/roles
       - run:
-          name: Get EC2 Instance ID for AWS Systems Manager # EC2インスタンスIDを取得
+          name: run ansible
           command: |
-            INSTANCE_NAME="AnsibleStackEC2-ALB-SG-ec2-instance" 
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=${INSTANCE_NAME}" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-            
-            if [ -z "$INSTANCE_ID" ]; then  
-              echo "Error: EC2 Instance ID could not be retrieved." 
-              exit 1
-            fi
-            
-            # SSMを使ってコマンドを実行する（テスト用）
-            aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters '{"commands":["echo \"Setting up instance for Ansible\"","yum -y update"]}' \
-              --region ap-northeast-1
+            echo AnsibleStackEC2-ALB-SG-ec2-instance >> myrole/tests/inventory.ini
+            ansible-playbook -i myrole/tests/inventory.ini ./Ansible_lesson.yml
       - run:
-          name: Verify SSM Agent Status # SSM Agentの状態を確認
+          name: Verify files exist
           command: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-            
-            # VPCのDNS設定を確認
-            echo "Checking VPC DNS settings..."
-            VPC_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --instance-ids $INSTANCE_ID \
-              --query "Reservations[0].Instances[0].VpcId" \
-              --output text)
-            
-            aws ec2 describe-vpcs \
-              --vpc-ids $VPC_ID \
-              --query "Vpcs[].{DNSHostnames:EnableDnsHostnames, DNSSupport:EnableDnsSupport}" \
-              --region ap-northeast-1 \
-              --output table
-            
-            # SSM Agentの状態を確認
-            echo "Checking SSM Agent status for instance $INSTANCE_ID..."
-            aws ssm describe-instance-information \
-              --region ap-northeast-1 \
-              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --query "InstanceInformationList[*].{InstanceId:InstanceId,PingStatus:PingStatus,LastPingDateTime:LastPingDateTime,AgentVersion:AgentVersion}" \
-              --output table
-            
-            # SSMへの登録を確認
-            echo "Verifying instance registration with SSM..."
-            SSM_INSTANCE_COUNT=$(aws ssm describe-instance-information \
-              --region ap-northeast-1 \
-              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --query "length(InstanceInformationList)" \
-              --output text)
-            
-            if [ "$SSM_INSTANCE_COUNT" -eq "0" ]; then
-              echo "ERROR: Instance $INSTANCE_ID is NOT registered with SSM!"
-              echo "Checking possible issues..."
-              
-              # 追加のトラブルシューティング情報を表示
-              echo "Instance details:"
-              aws ec2 describe-instances \
-                --instance-ids $INSTANCE_ID \
-                --query "Reservations[0].Instances[0].{InstanceId:InstanceId,State:State.Name,SubnetId:SubnetId,PublicIP:PublicIpAddress,PrivateIP:PrivateIpAddress,IAMRole:IamInstanceProfile.Arn}" \
-                --region ap-northeast-1 \
-                --output table
-              
-              exit 1
-            else
-              echo "SUCCESS: Instance $INSTANCE_ID is registered with SSM"
-            fi
-            
-            # エージェントがオンラインであることを確認
-            PING_STATUS=$(aws ssm describe-instance-information \
-              --region ap-northeast-1 \
-              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --query "InstanceInformationList[0].PingStatus" \
-              --output text)
-            
-            if [ "$PING_STATUS" != "Online" ]; then
-              echo "Error: SSM Agent is not online (status: $PING_STATUS). Cannot proceed with Ansible execution."
-              exit 1
-            fi
-      - run:
-          name: Run Ansible Playbook using AWS-ApplyAnsiblePlaybooks # AWS Systems ManagerでAnsibleを実行
-          command: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-            
-            # プレイブックファイルをS3にアップロード
-            aws s3 cp Ansible_lesson.yml s3://ansible-ssm-bucket-ansible-stack-bucket/playbooks/
-            
-            # AWS Systems Managerの「AWS-ApplyAnsiblePlaybooks」ドキュメントを使用してAnsibleを実行
-            # コマンド送信結果からコマンドIdを取得
-            COMMAND_ID=$(aws ssm send-command \
-              --document-name "AWS-ApplyAnsiblePlaybooks" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --timeout-seconds 900 \
-              --parameters '{"SourceType":["S3"],"SourceInfo":["{\"bucketName\":\"ansible-ssm-bucket-ansible-stack-bucket\", \"key\":\"playbooks/Ansible_lesson.yml\"}"],"InstallDependencies":["True"],"PlaybookFile":["Ansible_lesson.yml"],"ExtraVariables":["SSM=True"],"Check":["False"],"Verbose":["-v"]}' \
-              --region ap-northeast-1 \
-              --query "Command.CommandId" \
-              --output text)
-            
-            echo "Started SSM command with ID: $COMMAND_ID"
-            
-            # ステータス確認
-            # コマンドが完了するまで待つ
-            echo "Waiting for command to complete..."
-            aws ssm wait command-executed \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --region ap-northeast-1
-            
-            echo "Command execution completed!"
-            
-            # コマンドの詳細を表示
-            echo "Fetching command execution details..."
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --region ap-northeast-1
-
-      # GitとNginxのインストール確認ステップを追加
-      - run:
-          name: Verify Git and Nginx Installation on EC2 via SSM # GitとNginxのインストール確認
-          command: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --region ap-northeast-1 \
-              --filters "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
-              --query "Reservations[*].Instances[*].InstanceId" \
-              --output text)
-
-            # GitとNginxのバージョン確認コマンドを実行
-            # 改善: コマンドIDを直接取得する方法に変更
-            COMMAND_ID=$(aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
-              --parameters '{"commands":["git --version","nginx -v"]}' \
-              --region ap-northeast-1 \
-              --comment "Verify Git and Nginx installation" \
-              --query "Command.CommandId" \
-              --output text)
-            
-            echo "Started verification command with ID: $COMMAND_ID"
-
-            # コマンドが完了するまで待機
-            echo "Waiting for verification to complete..."
-            aws ssm wait command-executed \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --region ap-northeast-1
-
-            echo "Command Output:"
-            # 改善: 出力形式を明示的に指定
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --region ap-northeast-1 \
-              --query "StandardOutputContent" \
-              --output text
-
-  delete-cfn-stack: # スタック削除ジョブ
-    executor: python  # Pythonを呼び出し
-    steps:
-      - checkout  # リポジトリをチェックアウト
-      - run:
-          name: Install AWS CLI
-          command: |
-            sudo apt update
-            sudo apt install -y awscli
-      - run:
-          name: Delete CloudFormation Stack for S3 #S3スタックを削除
-          command: |
-            aws cloudformation delete-stack \
-              --stack-name ansible-stack-bucket \
-              --region ap-northeast-1
-      - run:
-          name: Delete CloudFormation Stack for EC2-ALB-SG  #EC2-ALB-SGスタックを削除
-          command: |
-            aws cloudformation delete-stack \
-              --stack-name AnsibleStackEC2-ALB-SG \
-              --region ap-northeast-1
-      - run:
-          name: Delete CloudFormation Stack for VPC #VPCスタックを削除
-          command: |
-            aws cloudformation delete-stack \
-              --stack-name AnsibleStackVPC \
-              --region ap-northeast-1
+            ls -l ./Ansible_lesson.yml
+            ls -l myrole/tests/inventory.ini
 
 workflows:
   default:
     jobs:
-      - setup-environment
+      - cfn-lint
+      - deploy-approve: # 手動承認ジョブ
+          type: approval
+          requires:
+            - cfn-lint
+      - setup-cfn:
+          requires:
+            - deploy-approve
       - ansible-playbook:
           requires:
-            - setup-environment
-      - delete-cfn-stack:
-          requires:
-            - ansible-playbook
+            - setup-cfn
 
