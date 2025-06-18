@@ -172,7 +172,7 @@ jobs:
           name: run serverspec
           command: |
             cd serverspec
-            rake spec:localhost
+            rake spec:all
 
 workflows:
   default:
