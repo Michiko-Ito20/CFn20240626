@@ -161,6 +161,12 @@ jobs:
       - get-public-ip
       - setup-ssh-config
       - run:
+          name: Set target host
+          command: |
+            echo "export TARGET_HOST=${EC2_PUBLIC_IP}" >> $BASH_ENV
+            source $BASH_ENV
+            echo "TARGET_HOST is set to ${TARGET_HOST}"
+      - run:
           name: install serverspec
           command: |
             sudo apt-get update
