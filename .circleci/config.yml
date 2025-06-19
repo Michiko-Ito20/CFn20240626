@@ -178,7 +178,7 @@ jobs:
           name: run serverspec
           command: |
             cd serverspec
-            rake spec:all
+            rake spec:test-target
 
 workflows:
   default:
