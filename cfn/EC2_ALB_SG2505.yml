@@ -86,7 +86,7 @@ Resources:
     Type: AWS::EC2::KeyPair
     Properties:
       KeyName: AnsibleStackEC2-ALB-SG-keypair
-      KeyType: rsa
+      KeyType: ed25519
       Tags:
         - Key: Name
           Value: AnsibleStackEC2-ALB-SG-keypair
