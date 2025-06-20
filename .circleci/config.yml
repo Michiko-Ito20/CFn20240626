@@ -152,6 +152,34 @@ jobs:
             ls -l ./Ansible_lesson.yml
             ls -l myrole/tests/inventory.ini
 
+  serverspec:
+    executor: python
+    steps:
+      - checkout
+      - install-dependencies
+      - install-aws-cli
+      - get-public-ip
+      - setup-ssh-config
+      - run:
+          name: Set target host
+          command: |
+            echo "export TARGET_HOST=${EC2_PUBLIC_IP}" >> $BASH_ENV
+            source $BASH_ENV
+            echo "TARGET_HOST is set to ${TARGET_HOST}"
+      - run:
+          name: install serverspec
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y ruby ruby-dev build-essential
+            sudo gem install serverspec
+            sudo gem install ed25519
+            sudo gem install bcrypt_pbkdf
+      - run:
+          name: run serverspec
+          command: |
+            cd serverspec
+            rake spec/test-target/sample_spec.rb
+
 workflows:
   default:
     jobs:
@@ -166,4 +194,6 @@ workflows:
       - ansible-playbook:
           requires:
             - setup-cfn
-
+      - serverspec:
+          requires:
+            - ansible-playbook
