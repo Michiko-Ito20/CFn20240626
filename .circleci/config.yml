@@ -190,7 +190,7 @@ jobs:
           name: run serverspec
           command: |
             cd serverspec
-            rake spec:test-target
+            rake spec/test-target/sample_spec.rb
 
 workflows:
   default:
