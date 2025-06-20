@@ -1,5 +1,7 @@
 require 'serverspec'
 require 'net/ssh'
+require 'ed25519'  # ED25519鍵を使用する場合
+require 'bcrypt_pbkdf'  # ED25519鍵を使用する場合
 
 set :backend, :ssh
 
@@ -18,10 +20,28 @@ host = ENV['TARGET_HOST']
 
 options = Net::SSH::Config.for(host)
 
-options[:user] ||= Etc.getlogin
+# ユーザー名の設定
+options[:user] = ENV['SSH_USER'] || 'ec2-user'
+
+# ED25519鍵を使用する場合
+options[:keys] = ['~/.ssh/id_ed25519']  # ED25519秘密鍵のパス
+options[:keys_only] = true
+options[:auth_methods] = ['publickey']
+
+# パスワード認証を使用する場合
+# options[:password] = ENV['SSH_PASSWORD']
+# options[:auth_methods] = ['password']
+
+# キーボードインタラクティブ認証を使用する場合
+# options[:auth_methods] = ['keyboard-interactive']
 
 set :host,        options[:host_name] || host
 set :ssh_options, options
+
+# デバッグ用にSSH設定を表示
+puts "Host: #{host}"
+puts "SSH User: #{options[:user]}"
+puts "SSH Keys: #{options[:keys]}"
 
 # Disable sudo
 # set :disable_sudo, true
