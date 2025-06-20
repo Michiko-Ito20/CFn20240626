@@ -175,18 +175,6 @@ jobs:
             sudo gem install ed25519
             sudo gem install bcrypt_pbkdf
       - run:
-          name: Set SSH credentials for ED25519
-          command: |
-            echo "export TARGET_HOST=${EC2_PUBLIC_IP}" >> $BASH_ENV
-            echo "export SSH_USER=ec2-user" >> $BASH_ENV
-            source $BASH_ENV
-            
-            # ED25519鍵を生成（必要な場合）
-            ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
-            
-            # 鍵をEC2インスタンスに転送（実際の環境に合わせて修正）
-            scp -o StrictHostKeyChecking=no ~/.ssh/id_ed25519.pub ec2-user@${EC2_PUBLIC_IP}:~/.ssh/authorized_keys
-      - run:
           name: run serverspec
           command: |
             cd serverspec
