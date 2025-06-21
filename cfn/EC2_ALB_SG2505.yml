@@ -97,7 +97,7 @@ Resources:
     Properties:
       GroupName: !Sub ${AWS::StackName}-alb-sg    # ALB用セキュリティグループの名前
       GroupDescription: ALB SG                   # ALB用セキュリティグループの説明
-      VpcId: !ImportValue Ansible--testVPC-id   # VPC IDをインポート
+      VpcId: !ImportValue Ansible-testVPC-id   # VPC IDをインポート
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-alb-sg
