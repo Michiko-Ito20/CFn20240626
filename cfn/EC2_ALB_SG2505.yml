@@ -9,7 +9,7 @@ Resources:
     Properties:
       GroupName: TEST-EC2SecurityGroup           # セキュリティグループの名前
       GroupDescription: TEST-EC2SecurityGroup   # セキュリティグループの説明
-      VpcId: !ImportValue lecture10-testVPC-id  # VPC IDをインポート
+      VpcId: !ImportValue Ansible-testVPC-id  # VPC IDをインポート
       SecurityGroupIngress:                     # インバウンドルール
         - IpProtocol: tcp
           CidrIp: 0.0.0.0/0                     # 全てのIPアドレスからの通信を許可
@@ -97,7 +97,7 @@ Resources:
     Properties:
       GroupName: !Sub ${AWS::StackName}-alb-sg    # ALB用セキュリティグループの名前
       GroupDescription: ALB SG                   # ALB用セキュリティグループの説明
-      VpcId: !ImportValue lecture10-testVPC-id   # VPC IDをインポート
+      VpcId: !ImportValue Ansible--testVPC-id   # VPC IDをインポート
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-alb-sg
@@ -147,7 +147,7 @@ Resources:
       Protocol: HTTP
       Matcher:
         HttpCode: '200'
-      VpcId: !ImportValue lecture10-testVPC-id
+      VpcId: !ImportValue Ansible-testVPC-id
       TargetType: instance
       Targets:
         - Id: !Ref TestEC2Instance
