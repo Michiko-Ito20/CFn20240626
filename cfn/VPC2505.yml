@@ -138,20 +138,20 @@ Outputs:                                   #リソースを追加、変更、削
   publicsubnet01:
     Value: !Ref publicsubnet01             #論理IDを参照
     Export:
-      Name: lecture10-publicsubnet01-id    #lecture10という名前のCloudFormationのpublicSubnet01
+      Name: AnsibleTest-publicsubnet01-id    #AnsibleTestという名前のCloudFormationのpublicSubnet01
 
   publicsubnet02:
     Value: !Ref publicsubnet02              #論理IDを参照
     Export:
-      Name: lecture10-publicsubnet02-id     #lecture10という名前のCloudFormationのpublicSubnet02
+      Name: AnsibleTest-publicsubnet02-id     #AnsibleTestという名前のCloudFormationのpublicSubnet02
 
   privatesubnet01:
     Value: !Ref privatesubnet01             #論理IDを参照
     Export:
-      Name: lecture10-privatesubnet01-id    #lecture10という名前のCloudFormationのPrivateSubnet01
+      Name: AnsibleTest-privatesubnet01-id    #AnsibleTestという名前のCloudFormationのPrivateSubnet01
 
   privatesubnet02:
     Value:  !Ref  privatesubnet02           #論理IDを参照
     Export:
-      Name: lecture10-privatesubnet02-id    #lecture10という名前のCloudFormationのPrivateSubnet02
+      Name: AnsibleTest-privatesubnet02-id    #AnsibleTestという名前のCloudFormationのPrivateSubnet02
 
