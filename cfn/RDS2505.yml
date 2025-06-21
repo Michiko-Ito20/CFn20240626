@@ -45,5 +45,5 @@ Outputs:                                        #リソースを追加、変更�
   DBInstanceID:
     Value: !Ref DBInstance                      #論理IDを参照
     Export:
-      Name: lecture10-DBInstanceID-id           #lecture10という名前のCloudFormationのDBInstanceID
+      Name: AnsibleTest-DBInstanceID-id           #AnsibleTestという名前のCloudFormationのDBInstanceID
 
