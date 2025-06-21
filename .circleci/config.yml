@@ -44,6 +44,7 @@ commands:
               --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
               --query 'Reservations[].Instances[].PublicIpAddress|[0]' \
               --output text)
+            echo "EC2 Public IP: ${EC2_PUBLIC_IP}"  # 取得したIPアドレスを表示
             echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
   setup-ssh-config:
     steps:
