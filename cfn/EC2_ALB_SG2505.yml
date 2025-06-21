@@ -63,7 +63,7 @@ Resources:
       NetworkInterfaces:                          # ネットワークインターフェースの設定
         - AssociatePublicIpAddress: "true"       # パブリックIPアドレスを関連付け
           DeviceIndex: "0"
-          SubnetId: !ImportValue lecture10-publicsubnet01-id # サブネットIDをインポート
+          SubnetId: !ImportValue AnsibleTest-publicsubnet01-id # サブネットIDをインポート
           GroupSet:
             - !Ref EC2SecurityGroup               # セキュリティグループを参照
           PrivateIpAddress: 10.0.0.4              # プライベートIPアドレス
@@ -119,8 +119,8 @@ Resources:
           Value: !Sub ${AWS::StackName}-alb
       IpAddressType: ipv4
       Subnets:
-        - !ImportValue lecture10-publicsubnet01-id
-        - !ImportValue lecture10-publicsubnet02-id
+        - !ImportValue AnsibleTest-publicsubnet01-id
+        - !ImportValue AnsibleTest-publicsubnet02-id
       SecurityGroups:
         - !Ref ALBSecurityGroup
 
