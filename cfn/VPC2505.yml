@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "Absible_CFn,Create-VPC,subnet"          #スタックの説明
+Description: "Anbsible_CFn,Create-VPC,subnet"          #スタックの説明
 
 # VPC作成
 Resources:
@@ -12,7 +12,7 @@ Resources:
       EnableDnsHostnames: true       # ← 追加
       Tags:                       #タグの指定、Key、Valueの順に記載する
         - Key: Name
-          Value: lecture10-VPC
+          Value: AnsibleTest-VPC
 
 
 # InternetGateway作成
@@ -21,7 +21,7 @@ Resources:
     Properties:
       Tags:                       #タグの指定、Key、Valueの順に記載する
         - Key: Name
-          Value: TEST-IGW             
+          Value: AnsibleTest-IGW             
 
 # InternetGatewayをVPCにくっつける
   AttachGateway:                  #リソースの名前
@@ -133,25 +133,25 @@ Outputs:                                   #リソースを追加、変更、削
   TestVPC:
     Value: !Ref TestVPC                     #論理IDを参照
     Export:
-      Name: lecture10-testVPC-id            #lecture10という名前のCloudFormationのVPC
+      Name: Ansible-testVPC-id            #Ansibleという名前のCloudFormationのVPC
 
   publicsubnet01:
     Value: !Ref publicsubnet01             #論理IDを参照
     Export:
-      Name: lecture10-publicsubnet01-id    #lecture10という名前のCloudFormationのpublicSubnet01
+      Name: AnsibleTest-publicsubnet01-id    #AnsibleTestという名前のCloudFormationのpublicSubnet01
 
   publicsubnet02:
     Value: !Ref publicsubnet02              #論理IDを参照
     Export:
-      Name: lecture10-publicsubnet02-id     #lecture10という名前のCloudFormationのpublicSubnet02
+      Name: AnsibleTest-publicsubnet02-id     #AnsibleTestという名前のCloudFormationのpublicSubnet02
 
   privatesubnet01:
     Value: !Ref privatesubnet01             #論理IDを参照
     Export:
-      Name: lecture10-privatesubnet01-id    #lecture10という名前のCloudFormationのPrivateSubnet01
+      Name: AnsibleTest-privatesubnet01-id    #AnsibleTestという名前のCloudFormationのPrivateSubnet01
 
   privatesubnet02:
     Value:  !Ref  privatesubnet02           #論理IDを参照
     Export:
-      Name: lecture10-privatesubnet02-id    #lecture10という名前のCloudFormationのPrivateSubnet02
+      Name: AnsibleTest-privatesubnet02-id    #AnsibleTestという名前のCloudFormationのPrivateSubnet02
 

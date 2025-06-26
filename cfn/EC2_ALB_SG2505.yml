@@ -9,7 +9,7 @@ Resources:
     Properties:
       GroupName: TEST-EC2SecurityGroup           # セキュリティグループの名前
       GroupDescription: TEST-EC2SecurityGroup   # セキュリティグループの説明
-      VpcId: !ImportValue lecture10-testVPC-id  # VPC IDをインポート
+      VpcId: !ImportValue Ansible-testVPC-id  # VPC IDをインポート
       SecurityGroupIngress:                     # インバウンドルール
         - IpProtocol: tcp
           CidrIp: 0.0.0.0/0                     # 全てのIPアドレスからの通信を許可
@@ -63,7 +63,7 @@ Resources:
       NetworkInterfaces:                          # ネットワークインターフェースの設定
         - AssociatePublicIpAddress: "true"       # パブリックIPアドレスを関連付け
           DeviceIndex: "0"
-          SubnetId: !ImportValue lecture10-publicsubnet01-id # サブネットIDをインポート
+          SubnetId: !ImportValue AnsibleTest-publicsubnet01-id # サブネットIDをインポート
           GroupSet:
             - !Ref EC2SecurityGroup               # セキュリティグループを参照
           PrivateIpAddress: 10.0.0.4              # プライベートIPアドレス
@@ -97,7 +97,7 @@ Resources:
     Properties:
       GroupName: !Sub ${AWS::StackName}-alb-sg    # ALB用セキュリティグループの名前
       GroupDescription: ALB SG                   # ALB用セキュリティグループの説明
-      VpcId: !ImportValue lecture10-testVPC-id   # VPC IDをインポート
+      VpcId: !ImportValue Ansible-testVPC-id   # VPC IDをインポート
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-alb-sg
@@ -119,8 +119,8 @@ Resources:
           Value: !Sub ${AWS::StackName}-alb
       IpAddressType: ipv4
       Subnets:
-        - !ImportValue lecture10-publicsubnet01-id
-        - !ImportValue lecture10-publicsubnet02-id
+        - !ImportValue AnsibleTest-publicsubnet01-id
+        - !ImportValue AnsibleTest-publicsubnet02-id
       SecurityGroups:
         - !Ref ALBSecurityGroup
 
@@ -147,7 +147,7 @@ Resources:
       Protocol: HTTP
       Matcher:
         HttpCode: '200'
-      VpcId: !ImportValue lecture10-testVPC-id
+      VpcId: !ImportValue Ansible-testVPC-id
       TargetType: instance
       Targets:
         - Id: !Ref TestEC2Instance

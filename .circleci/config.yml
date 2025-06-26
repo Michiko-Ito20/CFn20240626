@@ -44,6 +44,7 @@ commands:
               --filter "Name=tag:Name,Values=AnsibleStackEC2-ALB-SG-ec2-instance" \
               --query 'Reservations[].Instances[].PublicIpAddress|[0]' \
               --output text)
+            echo "EC2 Public IP: ${EC2_PUBLIC_IP}"  # 取得したIPアドレスを表示
             echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
   setup-ssh-config:
     steps:
@@ -120,14 +121,22 @@ jobs:
               --stack-name AnsibleStackEC2-ALB-SG \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
-      # - run:
-      #     name: Create CloudFormation Stack for S3 # S3スタックを作成
-      #     command: |
-      #       aws cloudformation deploy \
-      #         --template-file cfn/S32505.yml \
-      #         --stack-name Ansible-stack-bucket \
-      #         --region ap-northeast-1 \
-      #         --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Create CloudFormation Stack for RDS # RDSスタックを作成
+          command: |
+            aws cloudformation deploy \
+              --template-file cfn/RDS2505.yml \
+              --stack-name AnsibleStackRDS \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Create CloudFormation Stack for S3 # S3スタックを作成
+          command: |
+            aws cloudformation deploy \
+              --template-file cfn/S32505.yml \
+              --stack-name AnsibleStackS3 \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor: python
