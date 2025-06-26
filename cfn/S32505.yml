@@ -7,7 +7,7 @@ Resources:
   AnsibleS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "ansible-bucket-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+      BucketName: !Sub "ansible-bucket-${AWS::AccountId}-${AWS::Region}"
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
