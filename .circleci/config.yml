@@ -129,6 +129,14 @@ jobs:
               --stack-name AnsibleStackRDS \
               --region ap-northeast-1 \
               --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Create CloudFormation Stack for S3 # S3スタックを作成
+          command: |
+            aws cloudformation deploy \
+              --template-file cfn/S32505.yml \
+              --stack-name AnsibleStackS3 \
+              --region ap-northeast-1 \
+              --capabilities CAPABILITY_NAMED_IAM
 
   ansible-playbook: # Ansibleプレイブック実行ジョブ
     executor: python
