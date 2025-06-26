@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: "Ansible_CFn,Create-S3Bucket"  # スペルミスを修正
+Description: "Ansible_CFn,Create-S3Bucket"
 
 Resources: 
   # S3バケットの作成
   AnsibleS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "ansible-bucket-${AWS::AccountId}-${AWS::StackName}"
+      BucketName: !Sub "ansible-bucket-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -48,7 +48,7 @@ Resources:
   S3AccessRole:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: "CircleCI-S3-Role"
+      RoleName: !Sub "${AWS::StackName}-CircleCI-S3-Role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -56,12 +56,17 @@ Resources:
             Principal:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
+          # CircleCIからのアクセスが必要な場合は以下を追加
+          - Effect: "Allow"
+            Principal:
+              AWS: "arn:aws:iam::CIRCLECI_ACCOUNT_ID:role/CircleCI"  # CircleCIのアカウントIDとロールを適切に設定
+            Action: sts:AssumeRole
       Path: "/"
 
   S3AccessPolicies:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: "S3-Ansible-Access"
+      PolicyName: !Sub "${AWS::StackName}-S3-Ansible-Access"
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -85,7 +90,7 @@ Resources:
       Path: "/"
       Roles:
         - !Ref S3AccessRole
-      InstanceProfileName: "EC2-S3-Profile"
+      InstanceProfileName: !Sub "${AWS::StackName}-EC2-S3-Profile"
 
 Outputs:
   RoleArn:
