@@ -50,7 +50,7 @@ lecture10のREADMEで使った画像
 - nginx/tasks
 - tasks
 - vars
-- READ.md
+- README.md
 
 ## serverspec
 - bundle
@@ -64,8 +64,6 @@ lecture10のREADMEで使った画像
 ## その他フォルダ分けされて無いファイル
 - Ansible_lesson.yml  
 Ansibleを動かす課題で使ったAnsiblePlaybook
-- ansible.cfg
-Ansibleの設定ファイル　※最終的に202505のAnsibleでは使用せず
 - lecture10.md  
 lecture10のREADME
 -　lecture13.drawio
