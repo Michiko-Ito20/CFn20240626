@@ -1,5 +1,15 @@
 # フォルダ・ファイルの内容
 
+## cfn
+- EC2,ALB,SG2505.yml  
+Ansibleで使用したEC2,ALB,SGのCFnYAML
+- RDS2505.yml  
+Ansibleで使用したRDSのCFnYAML
+- S32505.yml  
+Ansibleで使用したS3のCFnYAML
+- VPCt2505.yml  
+Ansibleで使用したVPCのCFnYAML
+
 ## CFn_Training20241031  
 CFnを作成するトレーニングを行ったフォルダ
 - Failure-No1S3bucketPolicyTraining20241031.yml   
@@ -22,25 +32,47 @@ CFnでS3を作ろうと思って失敗して別に作成し、内容を整理さ
 - Failure-VPC20241021.yml  
 CFnでVPCを作ろうと思って失敗して別に作成し、内容を整理されていないファイル
 
-## lecuture10image  
-lecture10のREADMEで使った画像  
-
 ## Failure-Tr2025002png
 - Failure-Training-CFnS3BacketPolicy    
 CFnでCloudTrailとConfigを作成したファイルのREADMEを作ろうとして、いらなくなったS3バケットポリシーのスクリーンショット  
 
-## その他フォルダ訳されて無いファイル
+## lecture13image
+lecture13のREADMEで使った画像
+
+## lecuture10image  
+lecture10のREADMEで使った画像  
+
+## myrole
+- defaults
+- git/tasks
+- handlers
+- meta
+- nginx/tasks
+- tasks
+- vars
+- README.md
+
+## serverspec
+- bundle
+- spec
+- vendor
+- .rspec
+- Gemfile
+- Gemfile.lock
+- Rakefile
+
+## その他フォルダ分けされて無いファイル
 - Ansible_lesson.yml  
 Ansibleを動かす課題で使ったAnsiblePlaybook
-- EC2,ALB,SG2406.yml  
-lecture10の課題で使ったEC2,ALB,SGのCFnYAML※Ansibleで流用する際に若干の調整有り
 - lecture10.md  
 lecture10のREADME
-- RDStest2406.yml  
-lecture10の課題で使ったRDSのCFnYAML※Ansibleで流用する際に若干の調整有り
+-　lecture13.drawio
+lecture13の構成図
+- lecture13.md
+lecture13のREADME
+-　lecture15design_plan.md
+lecture15の設計プラン(実際にはlecture13)
+- lecture15overview_plan.md
+lecture15の概要(実際にはlecture13)
 - README.md  
 Devフォルダの内容説明
-- S3test2406.yml  
-lecture10の課題で使ったS3のCFnYAML※Ansibleで流用する際に若干の調整有り
-- VPCtest2406.yml  
-lecture10の課題で使ったVPCのCFnYAML※Ansibleで流用する際に若干の調整有り
